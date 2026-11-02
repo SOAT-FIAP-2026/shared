@@ -108,7 +108,9 @@ shared/
 │   │   └── CoreEstoqueEvents.cs
 │   └── AuthService/                      # Contratos da lambda-auth-function & JWT
 │       └── AuthContracts.cs
-├── tests/Fiap.TechChallenge.Contracts.Tests/
+├── tests/
+│   ├── Fiap.TechChallenge.Contracts.Tests/    # Testes unitários dos contratos compartilhados
+│   └── Fiap.TechChallenge.E2ETests/          # Suíte E2E e BDD (Reqnroll/Gherkin) integrada
 ├── floci/
 │   └── init/ready.d/01-init-aws.sh       # Provisiona DynamoDB, SNS, SQS e SSM no Floci
 ├── docker-compose.yml                    # Orquestração local com Floci + Floci UI
@@ -158,7 +160,16 @@ docker compose up -d
 | **LavinMQ Management** | `http://localhost:15672` | Broker AMQP auxiliar (`guest` / `guest`) |
 
 O container `floci` executa automaticamente o hook [`floci/init/ready.d/01-init-aws.sh`](floci/init/ready.d/01-init-aws.sh) ao iniciar, criando:
-- Tabela DynamoDB `techchallenge-ordem-servico-local` (com GSI1);
-- Tópico SNS `techchallenge-eventos-local`;
-- Filas SQS + DLQs para `os-microservice`, `execution-service` e `billing-service` com `FilterPolicy` por `tipoEvento`;
-- Parâmetro SSM `/techchallenge/prod/jwt_secret`.
+### 3. Executar os Testes E2E e BDD Reqnroll (Fluxo Completo Integrado)
+
+Com o ecossistema em execução (`docker compose up -d`), execute os testes BDD integrados que validam ponta a ponta o ciclo de vida da OS, catálogo, DynamoDB e mensageria:
+
+```bash
+cd shared
+dotnet test tests/Fiap.TechChallenge.E2ETests/Fiap.TechChallenge.E2ETests.csproj --logger "console;verbosity=normal"
+```
+
+Cenários BDD cobertos:
+1. **`1_CicloCompletoOrdemServico.feature`**: Abertura, Diagnóstico Técnico, Inclusão de Peças/Serviços, Reserva de Estoque, Aprovação de Orçamento, Execução e Confirmação de Entrega (validando API HTTP + DynamoDB).
+2. **`2_SagaCompensacaoFalhaEstoque.feature`**: Resiliência e validação transacional da Saga de Estoque.
+3. **`3_SanidadeEContratosMicrosservicos.feature`**: Health checks integrados e comunicação com emulador Floci (DynamoDB, tópicos SNS e filas SQS).

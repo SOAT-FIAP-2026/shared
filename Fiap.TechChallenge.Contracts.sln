@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -10,6 +10,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{71C95850-45F7-489F-BA07-46715FFE6267}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fiap.TechChallenge.Contracts.Tests", "tests\Fiap.TechChallenge.Contracts.Tests\Fiap.TechChallenge.Contracts.Tests.csproj", "{CDADAA28-CA70-4348-A196-031EBD0E18BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fiap.TechChallenge.E2ETests", "tests\Fiap.TechChallenge.E2ETests\Fiap.TechChallenge.E2ETests.csproj", "{8BE4828F-6C07-4A8E-9571-BAD9C7443815}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +30,14 @@ Global
 		{CDADAA28-CA70-4348-A196-031EBD0E18BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDADAA28-CA70-4348-A196-031EBD0E18BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDADAA28-CA70-4348-A196-031EBD0E18BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BE4828F-6C07-4A8E-9571-BAD9C7443815}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BE4828F-6C07-4A8E-9571-BAD9C7443815}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BE4828F-6C07-4A8E-9571-BAD9C7443815}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BE4828F-6C07-4A8E-9571-BAD9C7443815}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8AE761EE-5640-474C-86DA-4F7D9EF15736} = {A3F2BDA5-705C-4A85-ABFE-8D201DF632F3}
 		{CDADAA28-CA70-4348-A196-031EBD0E18BA} = {71C95850-45F7-489F-BA07-46715FFE6267}
+		{8BE4828F-6C07-4A8E-9571-BAD9C7443815} = {71C95850-45F7-489F-BA07-46715FFE6267}
 	EndGlobalSection
 EndGlobal
-
