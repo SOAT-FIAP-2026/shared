@@ -27,11 +27,31 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             _executionDb = executionDb;
         }
 
-        private void SetAuthHeader(HttpClient client)
+        private string? _mecanicoToken;
+
+        private async Task<string> ObterMecanicoTokenAsync()
         {
-            if (!string.IsNullOrEmpty(_context.AdminToken))
+            if (!string.IsNullOrEmpty(_mecanicoToken))
+                return _mecanicoToken;
+
+            var loginPayload = new { login = "mecanico@techchallenge.com", senha = "Mecanico@123" };
+            var response = await _http.PostAsJsonAsync($"{_config.CoreApiUrl}/api/v1/autenticacao/login", loginPayload);
+            if (response.IsSuccessStatusCode)
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _context.AdminToken);
+                var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+                _mecanicoToken = json.GetProperty("token").GetString();
+                return _mecanicoToken!;
+            }
+
+            return _context.AdminToken;
+        }
+
+        private void SetAuthHeader(HttpClient client, string? customToken = null)
+        {
+            var token = customToken ?? _context.AdminToken;
+            if (!string.IsNullOrEmpty(token))
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
         }
 
@@ -172,7 +192,8 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         [When(@"o mecânico inicia o diagnóstico no Execution Service")]
         public async Task QuandoOMecanicoIniciaODiagnosticoNoExecutionService()
         {
-            SetAuthHeader(_http);
+            var token = await ObterMecanicoTokenAsync();
+            SetAuthHeader(_http, token);
 
             // Inicia diagnóstico no Execution Service
             var response = await _http.PatchAsync(
@@ -195,13 +216,14 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
 
             var diagDb = await _executionDb.ObterDiagnosticoAsync(_context.OrdemProducaoId);
             diagDb.Should().NotBeNull("Registro do diagnóstico deve ser inserido na tabela diagnosticos do PostgreSQL");
-            diagDb!.NomeMecanico.Should().Be("Administrador");
+            diagDb!.NomeMecanico.Should().Be("Mecanico");
         }
 
         [When(@"o mecânico finaliza o diagnóstico técnico no Execution Service")]
         public async Task QuandoOMecanicoFinalizaODiagnosticoTecnicoNoExecutionService()
         {
-            SetAuthHeader(_http);
+            var token = await ObterMecanicoTokenAsync();
+            SetAuthHeader(_http, token);
 
             var request = new
             {
@@ -291,7 +313,8 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         [When(@"o mecânico inicia e finaliza as tarefas de execução no Execution Service")]
         public async Task QuandoOMecanicoIniciaEFinalizaAsTarefasDeExecucaoNoExecutionService()
         {
-            SetAuthHeader(_http);
+            var token = await ObterMecanicoTokenAsync();
+            SetAuthHeader(_http, token);
 
             // Inicia tarefa no Execution Service
             var resIniciarExec = await _http.PatchAsync(

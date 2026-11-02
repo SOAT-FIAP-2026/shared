@@ -227,17 +227,17 @@ Os contratos e a execução local estão centralizados em [`shared/`](./README.m
 - [ ] **Adicionar pipeline CI/CD** (`.github/workflows/`), Swagger/Postman, Dockerfile/K8s (ou documentar opção Serverless/K8s) e elevar cobertura de testes de `63.6%` para `>= 80%`.
 
 ### 4.2. [`fase1-tech-challenge`](../fase1-tech-challenge/README.md) (Responsável por Core / Catálogo / Estoque / Staff Auth)
-- [ ] **Remover/desativar [`OrdemServicoController.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Api/Controllers/V1/OrdemServicoController.cs)**, já que o domínio de OS foi migrado para o `os-microservice`.
-- [ ] **Incluir a permissão/role `Mecanico` no [`DatabaseSeed.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Infrastructure/Data/DatabaseSeed.cs)** para permitir login de mecânicos que operam o `execution-service`.
-- [ ] **Permitir que a role `Mecanico` consulte `GET /api/v1/servicos` e `GET /api/v1/pecas-insumos`** em [`ServicoController.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Api/Controllers/V1/ServicoController.cs) e [`PecaInsumoController.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Api/Controllers/V1/PecaInsumoController.cs).
-- [ ] **Adicionar telefone/celular e dados do veículo no retorno de `GET /api/v1/clientes/{id}` e `GET /api/v1/veiculos/{id}`** consumidos pelo [`CoreApiClient.cs`](../os-microservice/src/OrdemServico.Lambda/Infrastructure/Http/CoreApiClient.cs) do `os-microservice`.
+- [x] **Remover [`OrdemServicoController.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Api/Controllers/V1/OrdemServicoController.cs)** e código de aplicação legado de OS, delegando integralmente o domínio de OS para o `os-microservice`.
+- [x] **Incluir a permissão/role `Mecanico` e usuário padrão no [`DatabaseSeed.cs`](../fase1-tech-challenge/src/Fiap.TechChallenge.Infrastructure/Data/Seed/DatabaseSeed.cs)** para permitir login de mecânicos (`mecanico@techchallenge.com` / `Mecanico@123`).
+- [x] **Permitir que a role `Mecanico` consulte `GET /api/v1/servicos`, `GET /api/v1/pecas-insumos`, `GET /api/v1/veiculos`, `GET /api/v1/clientes` e `GET /api/v1/estoques`** nos controllers correspondentes.
+- [x] **Compatibilizar `ClienteDto` (suporte a celular/telefone) e dados do veículo** consumidos pelo [`CoreApiClient.cs`](../os-microservice/src/OrdemServico.Lambda/Infrastructure/Http/CoreApiClient.cs) do `os-microservice`.
 
 ### 4.3. [`execution-service`](../execution-service/README.md) (Responsável por Diagnóstico e Execução)
 - [x] **Substituído transporte RabbitMQ/LavinMQ por AWS SQS/SNS nativo:**
   - Implementado [`ExecutionSqsBackgroundWorker.cs`](../execution-service/src/Fiap.TechChallenge.Execution.Infrastructure/Messaging/ExecutionSqsBackgroundWorker.cs) consumindo da fila SQS `techchallenge-execucao-eventos-<stage>`.
   - Implementado [`AwsSnsEventPublisher.cs`](../execution-service/src/Fiap.TechChallenge.Execution.Infrastructure/Messaging/AwsSnsEventPublisher.cs) publicando eventos no tópico SNS `techchallenge-eventos-<stage>` com atributos de mensagem (`tipoEvento`).
   - LavinMQ completamente removido do ecossistema.
-- [ ] **Padronizar `Jwt:Issuer` e `Jwt:Audience` em [`JwtConfiguration.cs`](../execution-service/src/Fiap.TechChallenge.Execution.Api/Configurations/JwtConfiguration.cs)** para `TechChallenge` e `techchallenge.com.br` (iguais ao Core e `os-microservice`).
+- [x] **Padronizar `Jwt:Issuer` e `Jwt:Audience` em [`JwtConfiguration.cs`](../execution-service/src/Fiap.TechChallenge.Execution.Api/Configurations/JwtConfiguration.cs)** para `TechChallenge` e `techchallenge.com.br` (iguais ao Core e `os-microservice`).
 - [ ] **Adicionar K8s manifests (`k8s/`), CI/CD com SonarCloud (`.github/workflows/`), `coverlet.runsettings` (excluindo `Migrations`), OpenTelemetry e testes BDD (Reqnroll).**
 
 ### 4.4. [`billing-service`](../billing-service/README.md) (Responsável por Orçamento e Pagamento)
