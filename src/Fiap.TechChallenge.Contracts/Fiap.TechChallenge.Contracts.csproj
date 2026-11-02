@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- NuGet package metadata (GitHub Packages) -->
+    <PackageId>Fiap.TechChallenge.Contracts</PackageId>
+    <Version>1.1.0</Version>
+    <Authors>SOAT-FIAP-2026</Authors>
+    <Description>Contratos compartilhados (eventos SNS/SQS, comandos de compensação e DTOs HTTP) entre os-microservice, execution-service, billing-service, fase1-tech-challenge (Core) e lambda-auth-function.</Description>
+    <PackageTags>fiap;techchallenge;contracts;sns;sqs;saga;events</PackageTags>
+    <RepositoryUrl>https://github.com/SOAT-FIAP-2026/shared</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
+

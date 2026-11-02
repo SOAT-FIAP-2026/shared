@@ -1,0 +1,176 @@
+name: techchallenge-ecosystem
+
+services:
+  localstack:
+    image: localstack/localstack:3.7
+    container_name: techchallenge-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sns,sqs,dynamodb,ssm
+      DEFAULT_REGION: sa-east-1
+      AWS_DEFAULT_REGION: sa-east-1
+    volumes:
+      - ./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "awslocal", "sns", "list-topics", "--region", "sa-east-1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+  lavinmq:
+    image: cloudamqp/lavinmq:latest
+    container_name: techchallenge-lavinmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - lavinmq_data:/var/lib/lavinmq
+    healthcheck:
+      test: ["CMD", "lavinmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  core-db:
+    image: postgres:16-alpine
+    container_name: techchallenge-core-db
+    environment:
+      POSTGRES_DB: techchallenge_core_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - core_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d techchallenge_core_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  execution-db:
+    image: postgres:16-alpine
+    container_name: techchallenge-execution-db
+    environment:
+      POSTGRES_DB: techchallenge_execution_db
+      POSTGRES_USER: execution
+      POSTGRES_PASSWORD: execution_local_pwd
+    ports:
+      - "5433:5432"
+    volumes:
+      - execution_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U execution -d techchallenge_execution_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  billing-db:
+    image: postgres:16-alpine
+    container_name: techchallenge-billing-db
+    environment:
+      POSTGRES_DB: techchallenge_billing_db
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: billing_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - billing_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing -d techchallenge_billing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  core-service:
+    build:
+      context: ../fase1-tech-challenge
+      dockerfile: Dockerfile
+    container_name: techchallenge-core-service
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=core-db;Port=5432;Database=techchallenge_core_db;Username=postgres;Password=postgres_password"
+      AWS_REGION: "sa-east-1"
+      AWS_SERVICE_URL: "http://localstack:4566"
+      JWT_SECRET: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Secret: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Issuer: "TechChallenge"
+      Jwt__Audience: "techchallenge.com.br"
+    depends_on:
+      core-db:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+  execution-service:
+    build:
+      context: ../execution-service
+      dockerfile: Dockerfile
+    container_name: techchallenge-execution-service
+    ports:
+      - "8082:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__ExecutionDb: "Host=execution-db;Port=5432;Database=techchallenge_execution_db;Username=execution;Password=execution_local_pwd"
+      ConnectionStrings__LavinMq: "amqp://guest:guest@lavinmq:5672/"
+      AWS_REGION: "sa-east-1"
+      AWS_SERVICE_URL: "http://localstack:4566"
+      EVENTOS_TOPIC_ARN: "arn:aws:sns:sa-east-1:000000000000:techchallenge-eventos-local"
+      EXECUCAO_QUEUE_URL: "http://localstack:4566/000000000000/techchallenge-execucao-eventos-local"
+      JWT_SECRET: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Secret: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Issuer: "TechChallenge"
+      Jwt__Audience: "techchallenge.com.br"
+    depends_on:
+      execution-db:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      lavinmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  billing-service:
+    build:
+      context: ../billing-service
+      dockerfile: Dockerfile
+    container_name: techchallenge-billing-service
+    ports:
+      - "8081:8080"
+    profiles:
+      - full
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=billing-db;Port=5432;Database=techchallenge_billing_db;Username=billing;Password=billing_password"
+      AWS_REGION: "sa-east-1"
+      AWS_SERVICE_URL: "http://localstack:4566"
+      EVENTOS_TOPIC_ARN: "arn:aws:sns:sa-east-1:000000000000:techchallenge-eventos-local"
+      BILLING_QUEUE_URL: "http://localstack:4566/000000000000/techchallenge-billing-eventos-local"
+      JWT_SECRET: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Secret: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      Jwt__Issuer: "TechChallenge"
+      Jwt__Audience: "techchallenge.com.br"
+    depends_on:
+      billing-db:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  localstack_data:
+  lavinmq_data:
+  core_db_data:
+  execution_db_data:
+  billing_db_data:
+
