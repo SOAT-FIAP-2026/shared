@@ -107,9 +107,9 @@ shared/
 │   └── AuthService/                      # Contratos da lambda-auth-function & JWT
 │       └── AuthContracts.cs
 ├── tests/Fiap.TechChallenge.Contracts.Tests/
-├── localstack/
-│   └── init-aws.sh                       # Provisiona DynamoDB, SNS, SQS e SSM localmente
-├── docker-compose.yml                    # Orquestração local completa do ecossistema
+├── floci/
+│   └── init/ready.d/01-init-aws.sh       # Provisiona DynamoDB, SNS, SQS e SSM no Floci
+├── docker-compose.yml                    # Orquestração local com Floci + Floci UI
 └── Fiap.TechChallenge.Contracts.sln
 ```
 
@@ -127,7 +127,7 @@ shared/
 
 ---
 
-## 🚀 Como Executar Localmente (`shared/`)
+## 🚀 Como Executar Localmente com Floci + Floci UI (`shared/`)
 
 ### 1. Compilar e testar o pacote de contratos
 
@@ -137,15 +137,24 @@ dotnet build Fiap.TechChallenge.Contracts.sln
 dotnet test Fiap.TechChallenge.Contracts.sln
 ```
 
-### 2. Subir a infraestrutura local (LocalStack SNS/SQS/DynamoDB + Bancos PostgreSQL + Serviços)
+### 2. Subir a infraestrutura local (Floci + Floci UI + Bancos PostgreSQL + Serviços)
 
 ```bash
 cd shared
-chmod +x localstack/init-aws.sh
+chmod +x floci/init/ready.d/01-init-aws.sh
 docker compose up -d
 ```
 
-O container `localstack` executa automaticamente o script [`localstack/init-aws.sh`](localstack/init-aws.sh), criando:
+| Serviço Local | URL / Porta | Descrição |
+|---|---|---|
+| **Floci (AWS Emulator)** | `http://localhost:4566` | Emulador AWS para SNS, SQS, DynamoDB e SSM |
+| **Floci UI (Web Console)** | `http://localhost:4500` | Dashboard visual para inspecionar tópicos SNS, filas SQS, tabelas DynamoDB e SSM |
+| **Core Service Swagger** | `http://localhost:8080/swagger` | API Core (`fase1-tech-challenge`) |
+| **Execution Service Swagger** | `http://localhost:8082/swagger` | API de Diagnóstico e Produção (`execution-service`) |
+| **Billing Service Swagger** | `http://localhost:8081/swagger` | API de Orçamento e Pagamento (`billing-service` — profile `full`) |
+| **LavinMQ Management** | `http://localhost:15672` | Broker AMQP auxiliar (`guest` / `guest`) |
+
+O container `floci` executa automaticamente o hook [`floci/init/ready.d/01-init-aws.sh`](floci/init/ready.d/01-init-aws.sh) ao iniciar, criando:
 - Tabela DynamoDB `techchallenge-ordem-servico-local` (com GSI1);
 - Tópico SNS `techchallenge-eventos-local`;
 - Filas SQS + DLQs para `os-microservice`, `execution-service` e `billing-service` com `FilterPolicy` por `tipoEvento`;

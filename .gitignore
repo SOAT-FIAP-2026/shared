@@ -7,5 +7,4 @@ TestResults/
 *.suo
 .DS_Store
 .env
-localstack_data/
-
+floci_data/

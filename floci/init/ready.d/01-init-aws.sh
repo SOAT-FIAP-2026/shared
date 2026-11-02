@@ -1,14 +1,24 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
-echo "🚀 Inicializando recursos AWS locais no LocalStack (SNS, SQS, DynamoDB, SSM)..."
+echo "🚀 Inicializando recursos AWS locais no Floci (SNS, SQS, DynamoDB, SSM)..."
 
 REGION="sa-east-1"
 STAGE="local"
+ENDPOINT="http://localhost:4566"
+
+export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-test}"
+export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-test}"
+export AWS_DEFAULT_REGION="$REGION"
+
+if command -v awslocal >/dev/null 2>&1; then
+  AWS_CLI="awslocal --region $REGION"
+else
+  AWS_CLI="aws --endpoint-url=$ENDPOINT --region $REGION"
+fi
 
 # 1. Tabela DynamoDB (Single-Table do os-microservice)
-awslocal dynamodb create-table \
-  --region "$REGION" \
+$AWS_CLI dynamodb create-table \
   --table-name "techchallenge-ordem-servico-${STAGE}" \
   --attribute-definitions \
       AttributeName=PK,AttributeType=S \
@@ -26,11 +36,10 @@ awslocal dynamodb create-table \
       ],
       \"Projection\": {\"ProjectionType\": \"ALL\"}
     }
-  ]" || true
+  ]" >/dev/null 2>&1 || true
 
 # 2. Tópico SNS Central da Saga Coreografada
-TOPIC_ARN=$(awslocal sns create-topic \
-  --region "$REGION" \
+TOPIC_ARN=$($AWS_CLI sns create-topic \
   --name "techchallenge-eventos-${STAGE}" \
   --query 'TopicArn' --output text)
 
@@ -42,8 +51,8 @@ for QUEUE in \
   "techchallenge-os-eventos-${STAGE}" \
   "techchallenge-execucao-eventos-${STAGE}" \
   "techchallenge-billing-eventos-${STAGE}"; do
-  awslocal sqs create-queue --region "$REGION" --queue-name "${QUEUE}-dlq" >/dev/null
-  awslocal sqs create-queue --region "$REGION" --queue-name "$QUEUE" >/dev/null
+  $AWS_CLI sqs create-queue --queue-name "${QUEUE}-dlq" >/dev/null
+  $AWS_CLI sqs create-queue --queue-name "$QUEUE" >/dev/null
   echo "✅ Fila SQS criada: $QUEUE (+ DLQ)"
 done
 
@@ -51,8 +60,7 @@ done
 
 # 4.1. Fila do os-microservice
 OS_QUEUE_ARN="arn:aws:sqs:${REGION}:000000000000:techchallenge-os-eventos-${STAGE}"
-awslocal sns subscribe \
-  --region "$REGION" \
+$AWS_CLI sns subscribe \
   --topic-arn "$TOPIC_ARN" \
   --protocol sqs \
   --notification-endpoint "$OS_QUEUE_ARN" \
@@ -62,8 +70,7 @@ awslocal sns subscribe \
 
 # 4.2. Fila do execution-service
 EXEC_QUEUE_ARN="arn:aws:sqs:${REGION}:000000000000:techchallenge-execucao-eventos-${STAGE}"
-awslocal sns subscribe \
-  --region "$REGION" \
+$AWS_CLI sns subscribe \
   --topic-arn "$TOPIC_ARN" \
   --protocol sqs \
   --notification-endpoint "$EXEC_QUEUE_ARN" \
@@ -73,8 +80,7 @@ awslocal sns subscribe \
 
 # 4.3. Fila do billing-service
 BILL_QUEUE_ARN="arn:aws:sqs:${REGION}:000000000000:techchallenge-billing-eventos-${STAGE}"
-awslocal sns subscribe \
-  --region "$REGION" \
+$AWS_CLI sns subscribe \
   --topic-arn "$TOPIC_ARN" \
   --protocol sqs \
   --notification-endpoint "$BILL_QUEUE_ARN" \
@@ -83,12 +89,11 @@ awslocal sns subscribe \
   }' >/dev/null
 
 # 5. Parâmetro SSM de Segredo JWT Compartilhado
-awslocal ssm put-parameter \
-  --region "$REGION" \
+$AWS_CLI ssm put-parameter \
   --name "/techchallenge/prod/jwt_secret" \
   --value "techchallenge_jwt_secret_super_secure_key_1234567890!" \
   --type "SecureString" \
   --overwrite >/dev/null
 
-echo "🎉 Recursos AWS locais prontos no LocalStack!"
+echo "🎉 Recursos AWS locais prontos no Floci!"
 
