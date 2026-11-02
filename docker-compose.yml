@@ -133,6 +133,35 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  os-service:
+    build:
+      context: ../os-microservice
+      dockerfile: Dockerfile
+    container_name: techchallenge-os-service
+    ports:
+      - "8083:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      AWS_REGION: "sa-east-1"
+      AWS__Region: "sa-east-1"
+      AWS__ServiceURL: "http://floci:4566"
+      AWS_ENDPOINT_URL: "http://floci:4566"
+      AWS_ACCESS_KEY_ID: "test"
+      AWS_SECRET_ACCESS_KEY: "test"
+      TABLE_NAME: "techchallenge-ordem-servico-local"
+      EVENTOS_TOPIC_ARN: "arn:aws:sns:sa-east-1:000000000000:techchallenge-eventos-local"
+      COMPENSACAO_QUEUE_URL: "http://floci:4566/000000000000/techchallenge-ordem-servico-compensacao-local"
+      CORE_API_BASE_URL: "http://core-service:8080"
+      JWT_SECRET: "techchallenge_jwt_secret_super_secure_key_1234567890!"
+      JWT_ISSUER: "TechChallenge"
+      JWT_AUDIENCE: "techchallenge.com.br"
+    depends_on:
+      floci:
+        condition: service_healthy
+      core-service:
+        condition: service_started
+    restart: unless-stopped
+
   execution-service:
     build:
       context: ../execution-service

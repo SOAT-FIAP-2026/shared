@@ -152,6 +152,7 @@ docker compose up -d
 | **Floci (AWS Emulator)** | `http://localhost:4566` | Emulador AWS para SNS, SQS, DynamoDB e SSM |
 | **Floci UI (Web Console)** | `http://localhost:4500` | Dashboard visual para inspecionar tópicos SNS, filas SQS, tabelas DynamoDB e SSM |
 | **Core Service Swagger** | `http://localhost:8080/swagger` | API Core (`fase1-tech-challenge`) |
+| **OS Service API** | `http://localhost:8083/api/v1/ordens-servico/health` | API de Ordem de Serviço (`os-microservice` com DynamoDB no Floci) |
 | **Execution Service Swagger** | `http://localhost:8082/swagger` | API de Diagnóstico e Produção (`execution-service`) |
 | **Billing Service Swagger** | `http://localhost:8081/swagger` | API de Orçamento e Pagamento (`billing-service` — profile `full`) |
 | **LavinMQ Management** | `http://localhost:15672` | Broker AMQP auxiliar (`guest` / `guest`) |
