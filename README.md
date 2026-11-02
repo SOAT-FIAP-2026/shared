@@ -157,7 +157,6 @@ docker compose up -d
 | **OS Service API** | `http://localhost:8083/api/v1/ordens-servico/health` | API de Ordem de Serviço (`os-microservice` com DynamoDB no Floci) |
 | **Execution Service Swagger** | `http://localhost:8082/swagger` | API de Diagnóstico e Produção (`execution-service`) |
 | **Billing Service Swagger** | `http://localhost:8081/swagger` | API de Orçamento e Pagamento (`billing-service` — profile `full`) |
-| **LavinMQ Management** | `http://localhost:15672` | Broker AMQP auxiliar (`guest` / `guest`) |
 
 O container `floci` executa automaticamente o hook [`floci/init/ready.d/01-init-aws.sh`](floci/init/ready.d/01-init-aws.sh) ao iniciar, criando:
 ### 3. Executar os Testes E2E e BDD Reqnroll (Fluxo Completo Integrado)
@@ -170,6 +169,6 @@ dotnet test tests/Fiap.TechChallenge.E2ETests/Fiap.TechChallenge.E2ETests.csproj
 ```
 
 Cenários BDD cobertos:
-1. **`1_CicloCompletoOrdemServico.feature`**: Abertura, Diagnóstico Técnico, Inclusão de Peças/Serviços, Reserva de Estoque, Aprovação de Orçamento, Execução e Confirmação de Entrega (validando API HTTP + DynamoDB).
+1. **`1_CicloCompletoOrdemServico.feature`**: Abertura, Diagnóstico Técnico, Inclusão de Peças/Serviços, Aprovação de Orçamento, Execução e Confirmação de Entrega (validando APIs HTTP + persistência física em DynamoDB NoSQL e PostgreSQL do Execution Service).
 2. **`2_SagaCompensacaoFalhaEstoque.feature`**: Resiliência e validação transacional da Saga de Estoque.
 3. **`3_SanidadeEContratosMicrosservicos.feature`**: Health checks integrados e comunicação com emulador Floci (DynamoDB, tópicos SNS e filas SQS).

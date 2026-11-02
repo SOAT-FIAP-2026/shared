@@ -12,6 +12,7 @@ namespace Fiap.TechChallenge.E2ETests.Support
         public string OsApiUrl { get; }
         public string ExecutionApiUrl { get; }
         public string FlociUrl { get; }
+        public string ExecutionDbConnectionString { get; }
         public string AdminLogin { get; }
         public string AdminSenha { get; }
         public string TableName { get; }
@@ -29,6 +30,8 @@ namespace Fiap.TechChallenge.E2ETests.Support
             OsApiUrl = Configuration["Urls:OsApi"] ?? "http://localhost:8083";
             ExecutionApiUrl = Configuration["Urls:ExecutionApi"] ?? "http://localhost:8082";
             FlociUrl = Configuration["Urls:Floci"] ?? "http://localhost:4566";
+            ExecutionDbConnectionString = Configuration["ConnectionStrings:ExecutionDb"] 
+                ?? "Host=localhost;Port=5433;Database=techchallenge_execution_db;Username=execution;Password=execution_local_pwd";
 
             AdminLogin = Configuration["Auth:AdminLogin"] ?? "admin@techchallenge.com";
             AdminSenha = Configuration["Auth:AdminSenha"] ?? "Admin@123";

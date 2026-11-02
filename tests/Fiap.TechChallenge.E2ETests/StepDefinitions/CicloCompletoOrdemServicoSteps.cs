@@ -13,13 +13,18 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
     {
         private readonly E2ETestContext _context;
         private readonly AwsFlociHelper _floci;
+        private readonly ExecutionDbHelper _executionDb;
         private readonly TestConfiguration _config = TestConfiguration.Current;
         private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
 
-        public CicloCompletoOrdemServicoSteps(E2ETestContext context, AwsFlociHelper floci)
+        public CicloCompletoOrdemServicoSteps(
+            E2ETestContext context,
+            AwsFlociHelper floci,
+            ExecutionDbHelper executionDb)
         {
             _context = context;
             _floci = floci;
+            _executionDb = executionDb;
         }
 
         private void SetAuthHeader(HttpClient client)
@@ -78,15 +83,19 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
 
             _context.VeiculoId = Guid.Parse(veiculo.GetProperty("id").GetString()!);
             _context.VeiculoPlaca = veiculo.GetProperty("placa").GetString()!;
+            _context.VeiculoModelo = veiculo.TryGetProperty("modelo", out var m) ? m.GetString() ?? "Veiculo" : "Veiculo";
+            _context.VeiculoAno = veiculo.TryGetProperty("ano", out var a) ? a.GetInt32() : 2022;
 
             // Obtém primeiro serviço e primeira peça do catálogo
             var servicos = await _http.GetFromJsonAsync<List<JsonElement>>($"{_config.CoreApiUrl}/api/v1/servicos");
             servicos.Should().NotBeNullOrEmpty("Deve haver serviços cadastrados");
             _context.ServicoId = Guid.Parse(servicos![0].GetProperty("id").GetString()!);
+            _context.ServicoNome = servicos[0].GetProperty("nome").GetString()!;
 
             var pecas = await _http.GetFromJsonAsync<List<JsonElement>>($"{_config.CoreApiUrl}/api/v1/pecas-insumos");
             pecas.Should().NotBeNullOrEmpty("Deve haver peças cadastradas");
             _context.PecaId = Guid.Parse(pecas![0].GetProperty("id").GetString()!);
+            _context.PecaNome = pecas[0].GetProperty("descricao").GetString()!;
         }
 
         [When(@"o atendente solicita a abertura de uma nova Ordem de Serviço no OS Service")]
@@ -98,7 +107,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             {
                 clienteId = _context.ClienteId,
                 veiculoId = _context.VeiculoId,
-                observacao = "Abertura E2E BDD Test"
+                observacao = "Abertura E2E BDD Test Integrado"
             };
 
             var response = await _http.PostAsJsonAsync($"{_config.OsApiUrl}/api/v1/ordens-servico", request);
@@ -122,8 +131,9 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             statusDesc.Should().BeEquivalentTo(statusEsperado, "O status retornado na API deve bater com o esperado");
         }
 
+        [Then(@"a Ordem de Serviço é gravada fisicamente no DynamoDB")]
         [Then(@"a Ordem de Serviço pode ser consultada no DynamoDB")]
-        public async Task EntaoAOrdemDeServicoPodeSerConsultadaNoDynamoDB()
+        public async Task EntaoAOrdemDeServicoEGravadaFisicamenteNoDynamoDB()
         {
             var item = await _floci.ObterOrdemServicoDynamo(_context.OrdemServicoId);
             item.Should().NotBeNull("Item correspondente à OS deve existir na tabela DynamoDB");
@@ -132,52 +142,113 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             item["tipoEntidade"].S.Should().Be("ORDEM_SERVICO");
         }
 
+        [Then(@"o evento de abertura da OS é integrado com o Execution Service")]
+        public async Task EntaoOEventoDeAberturaDaOSEIntegradoComOExecutionService()
+        {
+            // Aguarda o worker SQS do execution-service consumir o evento publicado pelo os-microservice no SNS
+            OrdemProducaoDbRecord? ordemDb = null;
+            for (int i = 0; i < 15; i++)
+            {
+                ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+                if (ordemDb != null) break;
+                await Task.Delay(500);
+            }
+
+            ordemDb.Should().NotBeNull("Execution Service deve consumir OrdemServicoAbertaEvent da fila SQS e criar OrdemProducao");
+        }
+
+        [Then(@"a Ordem de Produção é gravada no PostgreSQL do Execution Service com status ""(.*)""")]
+        public async Task EntaoAOrdemDeProducaoEGravadaNoPostgreSqlDoExecutionServiceComStatus(string statusEsperado)
+        {
+            var ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+            ordemDb.Should().NotBeNull("OrdemProducao deve ser gravada no banco PostgreSQL do Execution Service");
+            ordemDb!.Status.Should().Be(statusEsperado, "Status no banco PostgreSQL deve coincidir");
+            ordemDb.ClienteNome.Should().Be(_context.ClienteNome);
+            ordemDb.VeiculoPlaca.Should().Be(_context.VeiculoPlaca);
+
+            _context.OrdemProducaoId = ordemDb.Id;
+        }
+
+        [When(@"o mecânico inicia o diagnóstico no Execution Service")]
+        public async Task QuandoOMecanicoIniciaODiagnosticoNoExecutionService()
+        {
+            SetAuthHeader(_http);
+
+            // Inicia diagnóstico no Execution Service
+            var response = await _http.PatchAsync(
+                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/diagnostico/iniciar",
+                null);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK, "Iniciar diagnóstico no Execution Service deve retornar 200 OK");
+
+            // Espelha o status no OS Service (EM_DIAGNOSTICO)
+            var resOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/iniciar-diagnostico", null);
+            resOs.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Then(@"o diagnóstico técnico é gravado no PostgreSQL do Execution Service com status ""(.*)""")]
+        public async Task EntaoODiagnosticoTecnicoEGravadoNoPostgreSqlDoExecutionServiceComStatus(string statusEsperado)
+        {
+            var ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+            ordemDb.Should().NotBeNull();
+            ordemDb!.Status.Should().Be(statusEsperado);
+
+            var diagDb = await _executionDb.ObterDiagnosticoAsync(_context.OrdemProducaoId);
+            diagDb.Should().NotBeNull("Registro do diagnóstico deve ser inserido na tabela diagnosticos do PostgreSQL");
+            diagDb!.NomeMecanico.Should().Be("Administrador");
+        }
+
+        [When(@"o mecânico finaliza o diagnóstico técnico no Execution Service")]
+        public async Task QuandoOMecanicoFinalizaODiagnosticoTecnicoNoExecutionService()
+        {
+            SetAuthHeader(_http);
+
+            var request = new
+            {
+                laudoTecnico = "Diagnóstico técnico validado via E2E BDD",
+                servicosSugeridos = new[]
+                {
+                    new { idServico = _context.ServicoId, descricao = _context.ServicoNome }
+                },
+                pecasSugeridas = new[]
+                {
+                    new { idPeca = _context.PecaId, quantidade = 1, descricao = _context.PecaNome }
+                }
+            };
+
+            var response = await _http.PostAsJsonAsync(
+                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/diagnostico/finalizar",
+                request);
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK, "Finalizar diagnóstico deve retornar 200 OK");
+
+            // Finaliza o diagnóstico no OS Service para avançar a OS para AguardandoAprovacao
+            var resOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/finalizar-diagnostico", null);
+            resOs.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Then(@"o status no PostgreSQL do Execution Service é atualizado para ""(.*)""")]
+        public async Task EntaoOStatusNoPostgreSqlDoExecutionServiceEAtualizadoPara(string statusEsperado)
+        {
+            var ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+            ordemDb.Should().NotBeNull();
+            ordemDb!.Status.Should().Be(statusEsperado);
+        }
+
         [When(@"o mecânico inclui itens de serviço e peças na Ordem de Serviço")]
         public async Task QuandoOMecanicoIncluiItensDeServicoEPecasNaOrdemDeServico()
         {
             SetAuthHeader(_http);
 
-            // Inclui serviço
+            // Inclui serviço no OS Service
             var reqServico = new { ServicosIds = new[] { _context.ServicoId } };
             var resServico = await _http.PostAsJsonAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos", reqServico);
             resServico.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            // Inclui peça
+            // Inclui peça no OS Service
             var reqPeca = new { PecasInsumosIds = new[] { _context.PecaId } };
             var resPeca = await _http.PostAsJsonAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/pecas-insumos", reqPeca);
             resPeca.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [When(@"o mecânico inicia o diagnóstico no OS Service")]
-        public async Task QuandoOMecanicoIniciaODiagnosticoNoOsService()
-        {
-            SetAuthHeader(_http);
-            var response = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/iniciar-diagnostico", null);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Then(@"a Ordem de Serviço passa para o status ""(.*)""")]
-        public async Task EntaoAOrdemDeServicoPassaParaOStatus(string statusEsperado)
-        {
-            SetAuthHeader(_http);
-            var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
-            os.GetProperty("statusDescricao").GetString().Should().BeEquivalentTo(statusEsperado);
-        }
-
-        [When(@"o mecânico finaliza o diagnóstico técnico")]
-        public async Task QuandoOMecanicoFinalizaODiagnosticoTecnico()
-        {
-            SetAuthHeader(_http);
-            var response = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/finalizar-diagnostico", null);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-        }
-
-        [Then(@"a Ordem de Serviço avança para ""(.*)""")]
-        public async Task EntaoAOrdemDeServicoAvancaPara(string statusEsperado)
-        {
-            SetAuthHeader(_http);
-            var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
-            os.GetProperty("statusDescricao").GetString().Should().BeEquivalentTo(statusEsperado);
         }
 
         [When(@"o cliente aprova o orçamento")]
@@ -185,33 +256,76 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         {
             SetAuthHeader(_http);
             var response = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/aprovar-orcamento?aprovado=true", null);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var body = await response.Content.ReadAsStringAsync();
+            response.StatusCode.Should().Be(HttpStatusCode.OK, $"Aprovação do orçamento deve retornar 200 OK. Resposta da API: {body}");
         }
 
-        [Then(@"a Ordem de Serviço é liberada para execução")]
-        public async Task EntaoAOrdemDeServicoELiberadaParaExecucao()
+        [Then(@"a Ordem de Serviço é atualizada no DynamoDB com orçamento aprovado")]
+        public async Task EntaoAOrdemDeServicoEAtualizadaNoDynamoDBComOrcamentoAprovado()
+        {
+            var item = await _floci.ObterOrdemServicoDynamo(_context.OrdemServicoId);
+            item.Should().NotBeNull();
+            item!["statusCodigo"].S.Should().Be("ORCAMENTO_APROVADO", "Status no DynamoDB deve refletir ORCAMENTO_APROVADO");
+        }
+
+        [Then(@"o Execution Service recebe a liberação e grava as tarefas no PostgreSQL com status ""(.*)""")]
+        public async Task EntaoOExecutionServiceRecebeALiberacaoEGravaAsTarefasNoPostgreSqlComStatus(string statusEsperado)
+        {
+            // Aguarda o worker SQS do execution-service consumir o evento OrdemServicoLiberadaParaExecucaoEvent
+            OrdemProducaoDbRecord? ordemDb = null;
+            for (int i = 0; i < 15; i++)
+            {
+                ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+                if (ordemDb != null && ordemDb.Status == statusEsperado) break;
+                await Task.Delay(500);
+            }
+
+            ordemDb.Should().NotBeNull();
+            ordemDb!.Status.Should().Be(statusEsperado, "OrdemProducao deve avançar para status NA_FILA via evento SQS");
+
+            var tarefasDb = await _executionDb.ObterTarefasAsync(_context.OrdemProducaoId);
+            tarefasDb.Should().NotBeEmpty("Tarefas de produção devem ser gravadas na tabela tarefas_producao via evento SQS");
+            _context.TarefaProducaoId = tarefasDb[0].Id;
+        }
+
+        [When(@"o mecânico inicia e finaliza as tarefas de execução no Execution Service")]
+        public async Task QuandoOMecanicoIniciaEFinalizaAsTarefasDeExecucaoNoExecutionService()
         {
             SetAuthHeader(_http);
-            var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
-            os.GetProperty("statusDescricao").GetString().Should().BeEquivalentTo("Orçamento Aprovado");
+
+            // Inicia tarefa no Execution Service
+            var resIniciarExec = await _http.PatchAsync(
+                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{_context.TarefaProducaoId}/iniciar",
+                null);
+            resIniciarExec.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Finaliza tarefa no Execution Service
+            var resFinalizarExec = await _http.PatchAsJsonAsync(
+                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{_context.TarefaProducaoId}/finalizar",
+                new { observacoes = "Tarefa executada com perfeição" });
+            resFinalizarExec.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            // Atualiza OS Service em paralelo para manter o espelhamento
+            var resIniciarOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/iniciar", null);
+            resIniciarOs.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            var resFinalizarOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/finalizar", null);
+            resFinalizarOs.StatusCode.Should().Be(HttpStatusCode.NoContent);
         }
 
-        [When(@"o mecânico inicia e finaliza as tarefas de execução")]
-        public async Task QuandoOMecanicoIniciaEFinalizaAsTarefasDeExecucao()
+        [Then(@"a Ordem de Produção é concluída no PostgreSQL do Execution Service")]
+        public async Task EntaoAOrdemDeProducaoEConcluidaNoPostgreSqlDoExecutionService()
         {
-            SetAuthHeader(_http);
+            var ordemDb = await _executionDb.ObterOrdemProducaoAsync(_context.OrdemServicoId);
+            ordemDb.Should().NotBeNull();
+            ordemDb!.Status.Should().Be("CONCLUIDA", "OrdemProducao deve estar CONCLUIDA no PostgreSQL do Execution Service");
 
-            // Inicia o serviço
-            var resIniciar = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/iniciar", null);
-            resIniciar.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-            // Finaliza o serviço
-            var resFinalizar = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/finalizar", null);
-            resFinalizar.StatusCode.Should().Be(HttpStatusCode.NoContent);
+            var tarefasDb = await _executionDb.ObterTarefasAsync(_context.OrdemProducaoId);
+            tarefasDb.Should().OnlyContain(t => t.Status == "CONCLUIDA", "Todas as tarefas no PostgreSQL devem estar CONCLUIDA");
         }
 
-        [Then(@"a Ordem de Serviço atinge o status ""(.*)""")]
-        public async Task EntaoAOrdemDeServicoAtingeOStatus(string statusEsperado)
+        [Then(@"a Ordem de Serviço no OS Service atinge o status ""(.*)""")]
+        public async Task EntaoAOrdemDeServicoNoOsServiceAtingeOStatus(string statusEsperado)
         {
             SetAuthHeader(_http);
             var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
@@ -226,12 +340,16 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
 
-        [Then(@"a Ordem de Serviço atinge o status final ""(.*)""")]
-        public async Task EntaoAOrdemDeServicoAtingeOStatusFinal(string statusEsperado)
+        [Then(@"a Ordem de Serviço atinge o status final ""(.*)"" no DynamoDB")]
+        public async Task EntaoAOrdemDeServicoAtingeOStatusFinalNoDynamoDB(string statusEsperado)
         {
             SetAuthHeader(_http);
             var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
             os.GetProperty("statusDescricao").GetString().Should().BeEquivalentTo(statusEsperado);
+
+            var item = await _floci.ObterOrdemServicoDynamo(_context.OrdemServicoId);
+            item.Should().NotBeNull();
+            item!["statusCodigo"].S.Should().Be("ENTREGUE", "Registro físico no DynamoDB deve estar com statusCodigo = ENTREGUE");
         }
     }
 }

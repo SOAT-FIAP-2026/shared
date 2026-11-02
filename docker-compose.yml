@@ -39,21 +39,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  lavinmq:
-    image: cloudamqp/lavinmq:latest
-    container_name: techchallenge-lavinmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - lavinmq_data:/var/lib/lavinmq
-    healthcheck:
-      test: ["CMD", "lavinmqctl", "status"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
-
   core-db:
     image: postgres:16-alpine
     container_name: techchallenge-core-db
@@ -172,7 +157,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__ExecutionDb: "Host=execution-db;Port=5432;Database=techchallenge_execution_db;Username=execution;Password=execution_local_pwd"
-      ConnectionStrings__LavinMq: "amqp://guest:guest@lavinmq:5672/"
       AWS_REGION: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
       AWS_ACCESS_KEY_ID: "test"
@@ -187,8 +171,6 @@ services:
       execution-db:
         condition: service_healthy
       floci:
-        condition: service_healthy
-      lavinmq:
         condition: service_healthy
     restart: unless-stopped
 
@@ -223,7 +205,6 @@ services:
 
 volumes:
   floci_data:
-  lavinmq_data:
   core_db_data:
   execution_db_data:
   billing_db_data:
