@@ -149,14 +149,14 @@ chmod +x floci/init/ready.d/01-init-aws.sh
 docker compose up -d
 ```
 
-| Serviço Local | URL / Porta | Descrição |
-|---|---|---|
-| **Floci (AWS Emulator)** | `http://localhost:4566` | Emulador AWS para SNS, SQS, DynamoDB e SSM |
-| **Floci UI (Web Console)** | `http://localhost:4500` | Dashboard visual para inspecionar tópicos SNS, filas SQS, tabelas DynamoDB e SSM |
-| **Core Service Swagger** | `http://localhost:8080/swagger` | API Core (`fase1-tech-challenge`) |
-| **OS Service API** | `http://localhost:8083/api/v1/ordens-servico/health` | API de Ordem de Serviço (`os-microservice` com DynamoDB no Floci) |
-| **Execution Service Swagger** | `http://localhost:8082/swagger` | API de Diagnóstico e Produção (`execution-service`) |
-| **Billing Service Swagger** | `http://localhost:8081/swagger` | API de Orçamento e Pagamento (`billing-service` — profile `full`) |
+| Serviço Local | Swagger UI / URL | OpenAPI JSON | Descrição |
+|---|---|---|---|
+| **Core Service (`fase1-tech-challenge`)** | [`http://localhost:8080/swagger`](http://localhost:8080/swagger) | `http://localhost:8080/swagger/v1/swagger.json` | API Core (.NET 8): Catálogo, Clientes, Veículos, Estoque e Staff Auth |
+| **OS Service (`os-microservice`)** | [`http://localhost:8083/swagger`](http://localhost:8083/swagger) | `http://localhost:8083/swagger/v1/swagger.json` | API de Ordem de Serviço (.NET 8 Lambda + DynamoDB NoSQL + Saga) |
+| **Execution Service (`execution-service`)** | [`http://localhost:8082/swagger`](http://localhost:8082/swagger) | `http://localhost:8082/swagger/v1/swagger.json` | API de Diagnóstico e Produção (.NET 8 + PostgreSQL dedicado) |
+| **Billing Service (`billing-service`)** | [`http://localhost:8081/swagger`](http://localhost:8081/swagger) | `http://localhost:8081/swagger/v1/swagger.json` | API de Orçamento e Pagamento (.NET 8 + PostgreSQL dedicado — profile `full`) |
+| **Floci (AWS Emulator)** | `http://localhost:4566` | — | Emulador AWS para SNS, SQS, DynamoDB e SSM |
+| **Floci UI (Web Console)** | [`http://localhost:4500`](http://localhost:4500) | — | Dashboard visual para inspecionar tópicos SNS, filas SQS, tabelas DynamoDB e SSM |
 
 O container `floci` executa automaticamente o hook [`floci/init/ready.d/01-init-aws.sh`](floci/init/ready.d/01-init-aws.sh) ao iniciar, criando:
 ### 3. Executar os Testes E2E e BDD Reqnroll (Fluxo Completo Integrado)
