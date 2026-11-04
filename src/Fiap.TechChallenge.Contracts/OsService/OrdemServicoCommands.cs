@@ -1,5 +1,8 @@
 namespace Fiap.TechChallenge.Contracts.OsService;
 
+using ComandoCompensacao = ComandoCompensacaoContrato;
+using TipoCompensacao = TipoCompensacaoContrato;
+
 /// <summary>
 /// Tipos de comando de compensação processados pela fila SQS
 /// <c>techchallenge-ordem-servico-compensacao-&lt;stage&gt;</c> no <c>os-microservice</c>.
@@ -21,4 +24,3 @@ public sealed record ComandoCompensacaoContrato(
     IReadOnlyCollection<Guid> PecasInsumosIds,
     string Motivo,
     Guid? IdSaga = null);
-
