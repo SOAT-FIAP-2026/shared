@@ -28,6 +28,7 @@ public class IntegrationEventTests
             "OrcamentoReprovadoEvent",
             "PecasInsumoIncluidasEvent",
             "StatusOrdemServicoAlteradoEvent",
+            "CompensacaoExecutadaEvent",
             // execution-service
             "DiagnosticoIniciadoEvent",
             "DiagnosticoTecnicoConcluidoEvent",

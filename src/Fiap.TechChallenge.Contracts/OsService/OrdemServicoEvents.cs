@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Fiap.TechChallenge.Contracts.Events;
 
 /// <summary>
@@ -10,6 +12,31 @@ public sealed record OrdemServicoAbertaEvent : IntegrationEvent
     public required VeiculoInfo Veiculo { get; init; }
     public string? FilialId { get; init; }
     public string? Observacao { get; init; }
+
+    public OrdemServicoAbertaEvent() { }
+
+    [SetsRequiredMembers]
+    public OrdemServicoAbertaEvent(
+        Guid osId,
+        ClienteInfo cliente,
+        VeiculoInfo veiculo,
+        string? filialId = null,
+        string? observacao = null)
+    {
+        OsId = osId;
+        Cliente = cliente;
+        Veiculo = veiculo;
+        FilialId = filialId;
+        Observacao = observacao;
+    }
+
+    public static OrdemServicoAbertaEvent Create(
+        Guid osId,
+        ClienteInfo cliente,
+        VeiculoInfo veiculo,
+        string? filialId = null,
+        string? observacao = null) =>
+        new(osId, cliente, veiculo, filialId, observacao);
 }
 
 /// <summary>
@@ -20,6 +47,18 @@ public sealed record OrdemServicoAbertaEvent : IntegrationEvent
 public sealed record DiagnosticoRejeitadoEvent : IntegrationEvent
 {
     public required string Motivo { get; init; }
+
+    public DiagnosticoRejeitadoEvent() { }
+
+    [SetsRequiredMembers]
+    public DiagnosticoRejeitadoEvent(Guid osId, string motivo)
+    {
+        OsId = osId;
+        Motivo = motivo;
+    }
+
+    public static DiagnosticoRejeitadoEvent Create(Guid osId, string motivo) =>
+        new(osId, motivo);
 }
 
 /// <summary>
@@ -32,6 +71,21 @@ public sealed record DiagnosticoFinalizadoEvent : IntegrationEvent
     public required IReadOnlyList<ItemOrcamentoInfo> Itens { get; init; }
     public required decimal Total { get; init; }
     public required ClienteInfo Cliente { get; init; }
+
+    public DiagnosticoFinalizadoEvent() { }
+
+    [SetsRequiredMembers]
+    public DiagnosticoFinalizadoEvent(
+        Guid osId,
+        IReadOnlyList<ItemOrcamentoInfo> itens,
+        decimal total,
+        ClienteInfo cliente)
+    {
+        OsId = osId;
+        Itens = itens;
+        Total = total;
+        Cliente = cliente;
+    }
 }
 
 /// <summary>
@@ -42,6 +96,18 @@ public sealed record DiagnosticoFinalizadoEvent : IntegrationEvent
 public sealed record OrdemServicoLiberadaParaExecucaoEvent : IntegrationEvent
 {
     public required IReadOnlyList<TarefaInfo> Tarefas { get; init; }
+
+    public OrdemServicoLiberadaParaExecucaoEvent() { }
+
+    [SetsRequiredMembers]
+    public OrdemServicoLiberadaParaExecucaoEvent(Guid osId, IReadOnlyList<TarefaInfo> tarefas)
+    {
+        OsId = osId;
+        Tarefas = tarefas;
+    }
+
+    public static OrdemServicoLiberadaParaExecucaoEvent Create(Guid osId, IReadOnlyList<TarefaInfo> tarefas) =>
+        new(osId, tarefas);
 }
 
 /// <summary>
@@ -53,6 +119,19 @@ public sealed record OrdemServicoCanceladaEvent : IntegrationEvent
 {
     public required string Motivo { get; init; }
     public IReadOnlyList<Guid> PecasInsumosIds { get; init; } = [];
+
+    public OrdemServicoCanceladaEvent() { }
+
+    [SetsRequiredMembers]
+    public OrdemServicoCanceladaEvent(Guid osId, string motivo, IReadOnlyList<Guid>? pecasInsumosIds = null)
+    {
+        OsId = osId;
+        Motivo = motivo;
+        PecasInsumosIds = pecasInsumosIds ?? [];
+    }
+
+    public static OrdemServicoCanceladaEvent Create(Guid osId, string motivo, IReadOnlyList<Guid>? pecasInsumosIds = null) =>
+        new(osId, motivo, pecasInsumosIds);
 }
 
 /// <summary>
@@ -62,6 +141,15 @@ public sealed record OrdemServicoCanceladaEvent : IntegrationEvent
 public sealed record OrcamentoReprovadoEvent : IntegrationEvent
 {
     public required IReadOnlyList<Guid> PecasInsumosIds { get; init; }
+
+    public OrcamentoReprovadoEvent() { }
+
+    [SetsRequiredMembers]
+    public OrcamentoReprovadoEvent(Guid osId, IReadOnlyList<Guid> pecasInsumosIds)
+    {
+        OsId = osId;
+        PecasInsumosIds = pecasInsumosIds;
+    }
 }
 
 /// <summary>
@@ -71,6 +159,16 @@ public sealed record PecasInsumoIncluidasEvent : IntegrationEvent
 {
     public required Guid IdSaga { get; init; }
     public required IReadOnlyList<Guid> PecasInsumosIds { get; init; }
+
+    public PecasInsumoIncluidasEvent() { }
+
+    [SetsRequiredMembers]
+    public PecasInsumoIncluidasEvent(Guid osId, Guid idSaga, IReadOnlyList<Guid> pecasInsumosIds)
+    {
+        OsId = osId;
+        IdSaga = idSaga;
+        PecasInsumosIds = pecasInsumosIds;
+    }
 }
 
 /// <summary>
@@ -80,5 +178,38 @@ public sealed record StatusOrdemServicoAlteradoEvent : IntegrationEvent
 {
     public required string StatusAnterior { get; init; }
     public required string StatusAtual { get; init; }
+
+    public StatusOrdemServicoAlteradoEvent() { }
+
+    [SetsRequiredMembers]
+    public StatusOrdemServicoAlteradoEvent(Guid osId, string statusAnterior, string statusAtual)
+    {
+        OsId = osId;
+        StatusAnterior = statusAnterior;
+        StatusAtual = statusAtual;
+    }
 }
 
+/// <summary>
+/// Publicado pelo <c>os-microservice</c> ao concluir uma etapa da Saga de compensação.
+/// </summary>
+public sealed record CompensacaoExecutadaEvent : IntegrationEvent
+{
+    public required string IdCompensacao { get; init; }
+    public required string Tipo { get; init; }
+    public string? Origem { get; init; }
+
+    public CompensacaoExecutadaEvent() { }
+
+    [SetsRequiredMembers]
+    public CompensacaoExecutadaEvent(Guid osId, string idCompensacao, string tipo, string? origem = null)
+    {
+        OsId = osId;
+        IdCompensacao = idCompensacao;
+        Tipo = tipo;
+        Origem = origem;
+    }
+
+    public static CompensacaoExecutadaEvent Create(Guid osId, string idCompensacao, string tipo, string? origem = null) =>
+        new(osId, idCompensacao, tipo, origem);
+}
