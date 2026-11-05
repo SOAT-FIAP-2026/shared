@@ -140,3 +140,4 @@ No `CicloCompletoOrdemServicoSteps.cs`:
 - [ ] **Passo 6:** Criar `4_FluxoFaturamentoEPagamentoOrdemServico.feature` e `FaturamentoPagamentoSteps.cs`.
 - [ ] **Passo 7:** Adicionar cenário de compensação assíncrona via SQS em `2_SagaCompensacaoFalhaEstoque.feature`.
 - [ ] **Passo 8:** Executar `docker compose --profile full up -d --build` e validar `dotnet test` com 100% de aprovação sem chamadas de espelhamento manual.
+
