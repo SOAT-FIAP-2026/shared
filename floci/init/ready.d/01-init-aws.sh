@@ -108,13 +108,13 @@ subscribe_queue_with_filter() {
 }
 
 subscribe_queue_with_filter "techchallenge-os-eventos-local" \
-  '{"tipoEvento":["DiagnosticoIniciadoEvent","DiagnosticoTecnicoConcluidoEvent","ProducaoIniciadaEvent","ProducaoFinalizadaEvent","ProducaoCanceladaEvent","PagamentoConfirmadoEvent","PagamentoRecusadoEvent","PagamentoRecusado","PagamentoCanceladoCompensacaoEvent","PagamentoEstornadoEvent","OrcamentoReprovado","OrdemServicoCancelada","ReservaEstoqueFalhou"]}'
+  '{"tipoEvento":["DiagnosticoIniciadoEvent","DiagnosticoTecnicoConcluidoEvent","OrcamentoGeradoEvent","ProducaoIniciadaEvent","ProducaoFinalizadaEvent","ProducaoCanceladaEvent","PagamentoConfirmadoEvent","PagamentoRecusadoEvent","PagamentoRecusado","PagamentoCanceladoCompensacaoEvent","PagamentoEstornadoEvent","OrcamentoReprovado","OrdemServicoCancelada","OrdemServicoCanceladaEvent","ReservaEstoqueFalhou"]}'
 
 subscribe_queue_with_filter "techchallenge-execucao-eventos-local" \
   '{"tipoEvento":["OrdemServicoAbertaEvent","OrdemServicoCriada","DiagnosticoRejeitadoEvent","OrdemServicoLiberadaParaExecucaoEvent","OrdemServicoCanceladaEvent","OrdemServicoCancelada"]}'
 
 subscribe_queue_with_filter "techchallenge-billing-eventos-local" \
-  '{"tipoEvento":["DiagnosticoFinalizadoEvent","ProducaoCanceladaEvent","OrdemServicoCanceladaEvent","OrdemServicoCancelada"]}'
+  '{"tipoEvento":["DiagnosticoTecnicoConcluidoEvent","ProducaoCanceladaEvent","ProducaoCancelada"]}'
 
 # 4. SSM Parameter Store (Segredo JWT compartilhado)
 echo "🔐 [4/4] Criando parâmetro SSM /techchallenge/prod/jwt_secret..."

@@ -18,6 +18,13 @@ namespace Fiap.TechChallenge.E2ETests.Support
         public string ServicoNome { get; set; } = string.Empty;
         public Guid PecaId { get; set; }
         public string PecaNome { get; set; } = string.Empty;
+
+        // Billing Lifecycle State
+        public Guid? OrcamentoId { get; set; }
+        public Guid? PagamentoId { get; set; }
+        public string? ExternalPaymentId { get; set; }
+        public decimal? ValorOrcamento { get; set; }
+
         public HttpResponseMessage? UltimaResposta { get; set; }
         public string? UltimoCorpoResposta { get; set; }
     }

@@ -12,3 +12,10 @@ Funcionalidade: Compensação Transacional da Saga de Estoque
     Então o sistema rejeita a operação com erro de validação
     E o status da Ordem de Serviço permanece inalterado
 
+  Cenário: Compensação assíncrona na OS quando o pagamento é recusado ou cancelado no Billing Service
+    Dado que o atendente possui uma Ordem de Serviço aguardando pagamento com peças reservadas no estoque
+    Quando o pagamento é recusado no Billing Service disparando PagamentoCanceladoCompensacaoEvent no SNS
+    Então a Lambda de compensação do OS Service consome o evento da fila SQS
+    E o estoque da peça reservada é estornado no Core Service
+    E o status da Ordem de Serviço no DynamoDB é atualizado para "CANCELADA"
+

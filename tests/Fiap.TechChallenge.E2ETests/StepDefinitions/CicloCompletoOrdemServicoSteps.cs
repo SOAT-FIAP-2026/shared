@@ -56,6 +56,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         }
 
         [Given(@"que os microsserviços Core, OS e Execução estão operacionais")]
+        [Given(@"que os microsserviços Core, OS, Execução e Billing estão operacionais")]
         [Given(@"que os microsserviços Core e OS estão operacionais")]
         public async Task DadoQueOsMicrosservicosEstaoOperacionais()
         {
@@ -67,6 +68,9 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
 
             var resExec = await _http.GetAsync($"{_config.ExecutionApiUrl}/health/live");
             resExec.IsSuccessStatusCode.Should().BeTrue("Execution Service deve estar operacional");
+
+            var resBilling = await _http.GetAsync($"{_config.BillingApiUrl}/health");
+            resBilling.IsSuccessStatusCode.Should().BeTrue("Billing Service deve estar operacional");
         }
 
         [Given(@"que o usuário autentica como Administrador no Core Service")]
@@ -195,16 +199,25 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             var token = await ObterMecanicoTokenAsync();
             SetAuthHeader(_http, token);
 
-            // Inicia diagnóstico no Execution Service
+            // Inicia diagnóstico no Execution Service (que publica DiagnosticoIniciadoEvent no SNS)
             var response = await _http.PatchAsync(
                 $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/diagnostico/iniciar",
                 null);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK, "Iniciar diagnóstico no Execution Service deve retornar 200 OK");
 
-            // Espelha o status no OS Service (EM_DIAGNOSTICO)
-            var resOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/iniciar-diagnostico", null);
-            resOs.StatusCode.Should().Be(HttpStatusCode.OK);
+            // Aguarda sincronização assíncrona via evento DiagnosticoIniciadoEvent no OS Service (DynamoDB)
+            Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>? item = null;
+            for (int i = 0; i < 20; i++)
+            {
+                item = await _floci.ObterOrdemServicoDynamo(_context.OrdemServicoId);
+                if (item != null && item.TryGetValue("statusCodigo", out var sc) && sc.S == "EM_DIAGNOSTICO")
+                    break;
+                await Task.Delay(500);
+            }
+
+            item.Should().NotBeNull();
+            item!["statusCodigo"].S.Should().Be("EM_DIAGNOSTICO", "OS Service deve atualizar status para EM_DIAGNOSTICO via evento DiagnosticoIniciadoEvent");
         }
 
         [Then(@"o diagnóstico técnico é gravado no PostgreSQL do Execution Service com status ""(.*)""")]
@@ -244,9 +257,18 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
 
             response.StatusCode.Should().Be(HttpStatusCode.OK, "Finalizar diagnóstico deve retornar 200 OK");
 
-            // Finaliza o diagnóstico no OS Service para avançar a OS para AguardandoAprovacao
-            var resOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/finalizar-diagnostico", null);
-            resOs.StatusCode.Should().Be(HttpStatusCode.OK);
+            // Aguarda sincronização assíncrona via DiagnosticoTecnicoConcluidoEvent no OS Service (DynamoDB)
+            Dictionary<string, Amazon.DynamoDBv2.Model.AttributeValue>? item = null;
+            for (int i = 0; i < 20; i++)
+            {
+                item = await _floci.ObterOrdemServicoDynamo(_context.OrdemServicoId);
+                if (item != null && item.TryGetValue("statusCodigo", out var sc) && sc.S == "AGUARDANDO_APROVACAO")
+                    break;
+                await Task.Delay(500);
+            }
+
+            item.Should().NotBeNull();
+            item!["statusCodigo"].S.Should().Be("AGUARDANDO_APROVACAO", "OS Service deve atualizar status para AGUARDANDO_APROVACAO via evento DiagnosticoTecnicoConcluidoEvent");
         }
 
         [Then(@"o status no PostgreSQL do Execution Service é atualizado para ""(.*)""")]
@@ -316,24 +338,23 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             var token = await ObterMecanicoTokenAsync();
             SetAuthHeader(_http, token);
 
-            // Inicia tarefa no Execution Service
-            var resIniciarExec = await _http.PatchAsync(
-                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{_context.TarefaProducaoId}/iniciar",
-                null);
-            resIniciarExec.StatusCode.Should().Be(HttpStatusCode.OK);
+            var tarefasDb = await _executionDb.ObterTarefasAsync(_context.OrdemProducaoId);
+            tarefasDb.Should().NotBeEmpty();
 
-            // Finaliza tarefa no Execution Service
-            var resFinalizarExec = await _http.PatchAsJsonAsync(
-                $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{_context.TarefaProducaoId}/finalizar",
-                new { observacoes = "Tarefa executada com perfeição" });
-            resFinalizarExec.StatusCode.Should().Be(HttpStatusCode.OK);
+            foreach (var tarefa in tarefasDb)
+            {
+                // Inicia tarefa no Execution Service
+                var resIniciarExec = await _http.PatchAsync(
+                    $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{tarefa.Id}/iniciar",
+                    null);
+                resIniciarExec.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            // Atualiza OS Service em paralelo para manter o espelhamento
-            var resIniciarOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/iniciar", null);
-            resIniciarOs.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-            var resFinalizarOs = await _http.PatchAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}/servicos/{_context.ServicoId}/finalizar", null);
-            resFinalizarOs.StatusCode.Should().Be(HttpStatusCode.NoContent);
+                // Finaliza tarefa no Execution Service (quando a última é concluída, Execution Service publica ProducaoFinalizadaEvent)
+                var resFinalizarExec = await _http.PatchAsJsonAsync(
+                    $"{_config.ExecutionApiUrl}/api/v1/producao/{_context.OrdemProducaoId}/tarefas/{tarefa.Id}/finalizar",
+                    new { observacoes = "Tarefa executada com perfeição" });
+                resFinalizarExec.StatusCode.Should().Be(HttpStatusCode.OK);
+            }
         }
 
         [Then(@"a Ordem de Produção é concluída no PostgreSQL do Execution Service")]
@@ -351,8 +372,18 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         public async Task EntaoAOrdemDeServicoNoOsServiceAtingeOStatus(string statusEsperado)
         {
             SetAuthHeader(_http);
-            var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
-            os.GetProperty("statusDescricao").GetString().Should().BeEquivalentTo(statusEsperado);
+
+            string? statusAtual = null;
+            for (int i = 0; i < 25; i++)
+            {
+                var os = await _http.GetFromJsonAsync<JsonElement>($"{_config.OsApiUrl}/api/v1/ordens-servico/{_context.OrdemServicoId}");
+                statusAtual = os.GetProperty("statusDescricao").GetString();
+                if (string.Equals(statusAtual, statusEsperado, StringComparison.OrdinalIgnoreCase))
+                    break;
+                await Task.Delay(500);
+            }
+
+            statusAtual.Should().BeEquivalentTo(statusEsperado, "OS Service deve atingir o status esperado via consumo assíncrono do ProducaoFinalizadaEvent");
         }
 
         [When(@"o cliente confirma a entrega do veículo")]

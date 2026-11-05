@@ -134,6 +134,48 @@ namespace Fiap.TechChallenge.E2ETests.Features
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Compensação assíncrona na OS quando o pagamento é recusado ou cancelado no Billin" +
+            "g Service")]
+        [Xunit.TraitAttribute("FeatureTitle", "Compensação Transacional da Saga de Estoque")]
+        [Xunit.TraitAttribute("Description", "Compensação assíncrona na OS quando o pagamento é recusado ou cancelado no Billin" +
+            "g Service")]
+        public async System.Threading.Tasks.Task CompensacaoAssincronaNaOSQuandoOPagamentoERecusadoOuCanceladoNoBillingService()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Compensação assíncrona na OS quando o pagamento é recusado ou cancelado no Billin" +
+                    "g Service", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 15
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 16
+    await testRunner.GivenAsync("que o atendente possui uma Ordem de Serviço aguardando pagamento com peças reserv" +
+                        "adas no estoque", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+#line hidden
+#line 17
+    await testRunner.WhenAsync("o pagamento é recusado no Billing Service disparando PagamentoCanceladoCompensaca" +
+                        "oEvent no SNS", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+#line hidden
+#line 18
+    await testRunner.ThenAsync("a Lambda de compensação do OS Service consome o evento da fila SQS", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 19
+    await testRunner.AndAsync("o estoque da peça reservada é estornado no Core Service", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+#line 20
+    await testRunner.AndAsync("o status da Ordem de Serviço no DynamoDB é atualizado para \"CANCELADA\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "2.0.0.0")]
         [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
         public class FixtureData : object, Xunit.IAsyncLifetime

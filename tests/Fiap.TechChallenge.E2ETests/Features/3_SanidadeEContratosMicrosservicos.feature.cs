@@ -113,7 +113,7 @@ namespace Fiap.TechChallenge.E2ETests.Features
             {
                 await this.ScenarioStartAsync();
 #line 8
-    await testRunner.WhenAsync("consulto os endpoints de health dos serviços Core, OS e Execution", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+    await testRunner.WhenAsync("consulto os endpoints de health dos serviços Core, OS, Execution e Billing", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
 #line 9
     await testRunner.ThenAsync("todos os serviços retornam status saudável", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");

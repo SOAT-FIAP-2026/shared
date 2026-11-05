@@ -14,6 +14,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         private HttpResponseMessage? _resCore;
         private HttpResponseMessage? _resOs;
         private HttpResponseMessage? _resExec;
+        private HttpResponseMessage? _resBilling;
 
         public SanidadeSteps(AwsFlociHelper floci)
         {
@@ -21,11 +22,13 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         }
 
         [When(@"consulto os endpoints de health dos serviços Core, OS e Execution")]
+        [When(@"consulto os endpoints de health dos serviços Core, OS, Execution e Billing")]
         public async Task QuandoConsultoOsEndpointsDeHealthDosServicosCoreOsEExecution()
         {
             _resCore = await _http.GetAsync($"{_config.CoreApiUrl}/health/live");
             _resOs = await _http.GetAsync($"{_config.OsApiUrl}/api/v1/ordens-servico/health");
             _resExec = await _http.GetAsync($"{_config.ExecutionApiUrl}/health/live");
+            _resBilling = await _http.GetAsync($"{_config.BillingApiUrl}/health");
         }
 
         [Then(@"todos os serviços retornam status saudável")]
@@ -39,6 +42,9 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
 
             _resExec.Should().NotBeNull();
             _resExec!.StatusCode.Should().Be(HttpStatusCode.OK, "Execution Service deve responder HTTP 200");
+
+            _resBilling.Should().NotBeNull();
+            _resBilling!.StatusCode.Should().Be(HttpStatusCode.OK, "Billing Service deve responder HTTP 200");
         }
 
         [Then(@"os recursos no Floci \(DynamoDB, tópicos SNS e filas SQS\) estão acessíveis")]
@@ -57,6 +63,8 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             filas.Should().NotBeEmpty("Deve haver filas SQS criadas no Floci");
             filas.Should().Contain(f => f.Contains("techchallenge-os-eventos-local"));
             filas.Should().Contain(f => f.Contains("techchallenge-execucao-eventos-local"));
+            filas.Should().Contain(f => f.Contains("techchallenge-billing-eventos-local"));
+            filas.Should().Contain(f => f.Contains("techchallenge-billing-eventos-dlq-local"));
         }
     }
 }
