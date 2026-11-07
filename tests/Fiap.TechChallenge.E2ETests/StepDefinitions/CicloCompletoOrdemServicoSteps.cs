@@ -46,6 +46,9 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             return _context.AdminToken;
         }
 
+        private const string CorrelationHeader = "X-Correlation-ID";
+        private readonly string _sagaCorrelationId = $"e2e-saga-{Guid.NewGuid():N}";
+
         private void SetAuthHeader(HttpClient client, string? customToken = null)
         {
             var token = customToken ?? _context.AdminToken;
@@ -53,6 +56,9 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
             {
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
+
+            client.DefaultRequestHeaders.Remove(CorrelationHeader);
+            client.DefaultRequestHeaders.Add(CorrelationHeader, _sagaCorrelationId);
         }
 
         [Given(@"que os microsserviços Core, OS e Execução estão operacionais")]

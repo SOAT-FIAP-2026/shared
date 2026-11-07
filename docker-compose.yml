@@ -104,6 +104,7 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      OTEL_SERVICE_NAME: "techchallenge-core-service"
       ConnectionStrings__DefaultConnection: "Host=core-db;Port=5432;Database=techchallenge_core_db;Username=postgres;Password=postgres_password"
       AWS_REGION: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -131,6 +132,7 @@ services:
       - "8083:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      OTEL_SERVICE_NAME: "techchallenge-os-service"
       AWS_REGION: "sa-east-1"
       AWS__Region: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -164,6 +166,7 @@ services:
       - "8082:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      OTEL_SERVICE_NAME: "techchallenge-execution-service"
       ConnectionStrings__ExecutionDb: "Host=execution-db;Port=5432;Database=techchallenge_execution_db;Username=execution;Password=execution_local_pwd"
       AWS_REGION: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -195,6 +198,7 @@ services:
       - full
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      OTEL_SERVICE_NAME: "techchallenge-billing-service"
       ConnectionStrings__DefaultConnection: "Host=billing-db;Port=5432;Database=techchallenge_billing_db;Username=billing;Password=billing_password"
       AWS_REGION: "sa-east-1"
       AWS__Region: "sa-east-1"

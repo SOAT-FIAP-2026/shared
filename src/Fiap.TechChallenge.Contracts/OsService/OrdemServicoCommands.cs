@@ -23,4 +23,5 @@ public sealed record ComandoCompensacaoContrato(
     Guid IdOrdemServico,
     IReadOnlyCollection<Guid> PecasInsumosIds,
     string Motivo,
-    Guid? IdSaga = null);
+    Guid? IdSaga = null,
+    string? CorrelationId = null);

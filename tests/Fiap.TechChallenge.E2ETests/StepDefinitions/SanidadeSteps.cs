@@ -16,9 +16,14 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         private HttpResponseMessage? _resExec;
         private HttpResponseMessage? _resBilling;
 
+        private const string CorrelationHeader = "X-Correlation-ID";
+        private readonly string _sanityCorrelationId = $"e2e-sanity-{Guid.NewGuid():N}";
+
         public SanidadeSteps(AwsFlociHelper floci)
         {
             _floci = floci;
+            _http.DefaultRequestHeaders.Remove(CorrelationHeader);
+            _http.DefaultRequestHeaders.Add(CorrelationHeader, _sanityCorrelationId);
         }
 
         [When(@"consulto os endpoints de health dos serviços Core, OS e Execution")]
@@ -36,15 +41,23 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         {
             _resCore.Should().NotBeNull();
             _resCore!.StatusCode.Should().Be(HttpStatusCode.OK, "Core Service deve responder HTTP 200");
+            _resCore.Headers.TryGetValues(CorrelationHeader, out var coreCorr).Should().BeTrue();
+            coreCorr!.First().Should().Be(_sanityCorrelationId);
 
             _resOs.Should().NotBeNull();
             _resOs!.StatusCode.Should().Be(HttpStatusCode.OK, "OS Service deve responder HTTP 200");
+            _resOs.Headers.TryGetValues(CorrelationHeader, out var osCorr).Should().BeTrue();
+            osCorr!.First().Should().Be(_sanityCorrelationId);
 
             _resExec.Should().NotBeNull();
             _resExec!.StatusCode.Should().Be(HttpStatusCode.OK, "Execution Service deve responder HTTP 200");
+            _resExec.Headers.TryGetValues(CorrelationHeader, out var execCorr).Should().BeTrue();
+            execCorr!.First().Should().Be(_sanityCorrelationId);
 
             _resBilling.Should().NotBeNull();
             _resBilling!.StatusCode.Should().Be(HttpStatusCode.OK, "Billing Service deve responder HTTP 200");
+            _resBilling.Headers.TryGetValues(CorrelationHeader, out var billingCorr).Should().BeTrue();
+            billingCorr!.First().Should().Be(_sanityCorrelationId);
         }
 
         [Then(@"os recursos no Floci \(DynamoDB, tópicos SNS e filas SQS\) estão acessíveis")]

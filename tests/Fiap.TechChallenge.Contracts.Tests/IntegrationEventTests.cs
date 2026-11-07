@@ -149,6 +149,65 @@ public class IntegrationEventTests
         act.Should().Throw<JsonException>();
     }
 
+    [Fact]
+    public void CorrelationContext_Push_deve_propagar_e_restaurar_escopo_aninhado()
+    {
+        CorrelationContext.Current = null;
+
+        using (CorrelationContext.Push("corr-externo"))
+        {
+            CorrelationContext.Current.Should().Be("corr-externo");
+
+            var osId = Guid.NewGuid();
+            var evt = new ProducaoCanceladaEvent { OsId = osId, Motivo = "Teste" };
+            evt.XCorrelationId.Should().Be("corr-externo");
+            evt.ObterCorrelationId().Should().Be("corr-externo");
+            evt.CorrelationId.Should().Be(osId);
+
+            var customGuid = Guid.NewGuid();
+            using (CorrelationContext.Push(customGuid.ToString()))
+            {
+                CorrelationContext.Current.Should().Be(customGuid.ToString());
+                var innerEvt = new ProducaoCanceladaEvent { OsId = osId, Motivo = "Interno" };
+                innerEvt.CorrelationId.Should().Be(customGuid);
+                innerEvt.ObterCorrelationId().Should().Be(customGuid.ToString());
+            }
+
+            CorrelationContext.Current.Should().Be("corr-externo");
+        }
+
+        CorrelationContext.Current.Should().BeNull();
+    }
+
+    [Fact]
+    public void SnsCorrelationHelper_deve_extrair_correlation_id_de_envelope_sns_e_atributos_sqs()
+    {
+        var osId = Guid.NewGuid();
+        string snsEnvelope = $$"""
+        {
+          "Type": "Notification",
+          "Message": "{\"osId\":\"{{osId}}\"}",
+          "MessageAttributes": {
+            "tipoEvento": { "Type": "String", "Value": "DiagnosticoIniciadoEvent" },
+            "X-Correlation-ID": { "Type": "String", "Value": "corr-sns-envelope-123" },
+            "idOrdemServico": { "Type": "String", "Value": "{{osId}}" }
+          }
+        }
+        """;
+
+        SnsCorrelationHelper.ExtractCorrelationId(snsEnvelope).Should().Be("corr-sns-envelope-123");
+        SnsCorrelationHelper.ExtractOsId(snsEnvelope).Should().Be(osId.ToString());
+
+        var sqsAttrs = new Dictionary<string, string?>
+        {
+            [SnsMessageAttributes.CorrelationId] = "corr-sqs-attr-456"
+        };
+        SnsCorrelationHelper.ExtractCorrelationId("{}", sqsAttrs).Should().Be("corr-sqs-attr-456");
+
+        string fallbackJson = $$"""{ "osId": "{{osId}}" }""";
+        SnsCorrelationHelper.ExtractCorrelationId(fallbackJson).Should().Be(osId.ToString());
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private static T RoundTrip<T>(T value)
