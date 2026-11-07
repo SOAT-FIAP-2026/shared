@@ -105,6 +105,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       OTEL_SERVICE_NAME: "techchallenge-core-service"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       ConnectionStrings__DefaultConnection: "Host=core-db;Port=5432;Database=techchallenge_core_db;Username=postgres;Password=postgres_password"
       AWS_REGION: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -133,6 +135,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       OTEL_SERVICE_NAME: "techchallenge-os-service"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       AWS_REGION: "sa-east-1"
       AWS__Region: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -167,6 +171,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       OTEL_SERVICE_NAME: "techchallenge-execution-service"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       ConnectionStrings__ExecutionDb: "Host=execution-db;Port=5432;Database=techchallenge_execution_db;Username=execution;Password=execution_local_pwd"
       AWS_REGION: "sa-east-1"
       AWS_SERVICE_URL: "http://floci:4566"
@@ -194,11 +200,11 @@ services:
     container_name: techchallenge-billing-service
     ports:
       - "8081:8080"
-    profiles:
-      - full
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       OTEL_SERVICE_NAME: "techchallenge-billing-service"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
       ConnectionStrings__DefaultConnection: "Host=billing-db;Port=5432;Database=techchallenge_billing_db;Username=billing;Password=billing_password"
       AWS_REGION: "sa-east-1"
       AWS__Region: "sa-east-1"
@@ -221,8 +227,131 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # ============================================================================
+  # Stack de Observabilidade (Prometheus, Blackbox, Alertmanager, Loki, Tempo, OTel, Grafana)
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: techchallenge-prometheus
+    restart: unless-stopped
+    depends_on:
+      - core-service
+      - os-service
+      - execution-service
+      - billing-service
+      - blackbox-exporter
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../fase1-tech-challenge/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: techchallenge-blackbox
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ../fase1-tech-challenge/observability/blackbox/blackbox.yml:/config/blackbox.yml:ro
+    command:
+      - --config.file=/config/blackbox.yml
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: techchallenge-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../fase1-tech-challenge/observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    depends_on:
+      - alert-receiver
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+
+  alert-receiver:
+    image: python:3.12-alpine
+    container_name: techchallenge-alert-receiver
+    restart: unless-stopped
+    ports:
+      - "9094:8080"
+    volumes:
+      - ../fase1-tech-challenge/observability/alertmanager/receiver.py:/app/receiver.py:ro
+    command: ["python", "/app/receiver.py"]
+
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: techchallenge-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../fase1-tech-challenge/observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: techchallenge-tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ../fase1-tech-challenge/observability/tempo/tempo.yml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.102.1
+    container_name: techchallenge-otel-collector
+    restart: unless-stopped
+    depends_on:
+      - loki
+      - tempo
+    ports:
+      - "4319:4317"
+      - "4320:4318"
+    volumes:
+      - ../fase1-tech-challenge/observability/otel/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: techchallenge-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../fase1-tech-challenge/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../fase1-tech-challenge/observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../fase1-tech-challenge/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
 volumes:
   floci_data:
   core_db_data:
   execution_db_data:
   billing_db_data:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
+  loki_data:
+  tempo_data:

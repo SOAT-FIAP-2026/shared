@@ -154,9 +154,13 @@ docker compose up -d
 | **Core Service (`fase1-tech-challenge`)** | [`http://localhost:8080/swagger`](http://localhost:8080/swagger) | `http://localhost:8080/swagger/v1/swagger.json` | API Core (.NET 8): Catálogo, Clientes, Veículos, Estoque e Staff Auth |
 | **OS Service (`os-microservice`)** | [`http://localhost:8083/swagger`](http://localhost:8083/swagger) | `http://localhost:8083/swagger/v1/swagger.json` | API de Ordem de Serviço (.NET 8 Lambda + DynamoDB NoSQL + Saga) |
 | **Execution Service (`execution-service`)** | [`http://localhost:8082/swagger`](http://localhost:8082/swagger) | `http://localhost:8082/swagger/v1/swagger.json` | API de Diagnóstico e Produção (.NET 8 + PostgreSQL dedicado) |
-| **Billing Service (`billing-service`)** | [`http://localhost:8081/swagger`](http://localhost:8081/swagger) | `http://localhost:8081/swagger/v1/swagger.json` | API de Orçamento e Pagamento (.NET 8 + PostgreSQL dedicado — profile `full`) |
+| **Billing Service (`billing-service`)** | [`http://localhost:8081/swagger`](http://localhost:8081/swagger) | `http://localhost:8081/swagger/v1/swagger.json` | API de Orçamento e Pagamento (.NET 8 + PostgreSQL dedicado) |
 | **Floci (AWS Emulator)** | `http://localhost:4566` | — | Emulador AWS para SNS, SQS, DynamoDB e SSM |
 | **Floci UI (Web Console)** | [`http://localhost:4500`](http://localhost:4500) | — | Dashboard visual para inspecionar tópicos SNS, filas SQS, tabelas DynamoDB e SSM |
+| **Grafana (Observabilidade)** | [`http://localhost:3000`](http://localhost:3000) | — | Dashboards de Métricas, Logs JSON (`correlation_id`) e Traces (`admin` / `admin`) |
+| **Prometheus** | [`http://localhost:9090`](http://localhost:9090) | — | Coleta de `/metrics` e probes HTTP (`blackbox-exporter`) dos 4 microsserviços |
+| **Alertmanager** | [`http://localhost:9093`](http://localhost:9093) | — | Gestão de alertas do Prometheus + webhook local (`:9094`) |
+| **Loki & Tempo (via OTel Collector)** | `http://localhost:3100` / `:3200` | — | Backends de Logs estruturados e Traces distribuídos (OTLP `:4319` gRPC / `:4320` HTTP) |
 
 O container `floci` executa automaticamente o hook [`floci/init/ready.d/01-init-aws.sh`](floci/init/ready.d/01-init-aws.sh) ao iniciar, criando:
 ### 3. Executar os Testes E2E e BDD Reqnroll (Fluxo Completo Integrado)
