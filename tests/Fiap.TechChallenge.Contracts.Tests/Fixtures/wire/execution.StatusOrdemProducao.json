@@ -1,0 +1,33 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Domain:Fiap.TechChallenge.Execution.Domain.Aggregates.OrdemProducaoAggregate.StatusOrdemProducao",
+  "valores": [
+    {
+      "nome": "AguardandoDiagnostico",
+      "valor": 1
+    },
+    {
+      "nome": "EmDiagnostico",
+      "valor": 2
+    },
+    {
+      "nome": "DiagnosticoConcluido",
+      "valor": 3
+    },
+    {
+      "nome": "NaFila",
+      "valor": 4
+    },
+    {
+      "nome": "EmExecucao",
+      "valor": 5
+    },
+    {
+      "nome": "Concluida",
+      "valor": 6
+    },
+    {
+      "nome": "Cancelada",
+      "valor": 7
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "fonte": "Fiap.TechChallenge.Api:Fiap.TechChallenge.Api.Middlewares.ExceptionHandlingMiddleware+ErrorResponse",
+  "opcoes": "Http",
+  "forma": {
+    "message": "string",
+    "statusCode": "number",
+    "traceId": "string"
+  }
+}

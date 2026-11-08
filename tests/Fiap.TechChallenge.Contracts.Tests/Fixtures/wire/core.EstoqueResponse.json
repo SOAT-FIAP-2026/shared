@@ -1,0 +1,9 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Responses.EstoqueResponse",
+  "opcoes": "Http",
+  "forma": {
+    "id": "string",
+    "idPecaInsumo": "string",
+    "quantidade": "number"
+  }
+}

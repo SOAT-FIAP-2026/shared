@@ -1,0 +1,14 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.OrdemServicoCriada",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idCliente": "string",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "idVeiculo": "string",
+    "ocorridoEm": "string",
+    "status": "string",
+    "tipoEvento": "string"
+  }
+}

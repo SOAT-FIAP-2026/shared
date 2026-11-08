@@ -1,0 +1,26 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.DiagnosticoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "dataHoraFim": "string?",
+    "dataHoraInicio": "string",
+    "duracaoMinutos": "number?",
+    "id": "string",
+    "idMecanico": "string",
+    "laudoTecnico": "string?",
+    "nomeMecanico": "string",
+    "pecasSugeridas": [
+      {
+        "descricao": "string?",
+        "idPeca": "string",
+        "quantidade": "number"
+      }
+    ],
+    "servicosSugeridos": [
+      {
+        "descricao": "string?",
+        "idServico": "string"
+      }
+    ]
+  }
+}

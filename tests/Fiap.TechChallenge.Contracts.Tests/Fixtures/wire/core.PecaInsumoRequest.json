@@ -1,0 +1,8 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Requests.PecaInsumoRequest",
+  "opcoes": "Http",
+  "forma": {
+    "descricao": "string",
+    "valorUnitario": "number"
+  }
+}

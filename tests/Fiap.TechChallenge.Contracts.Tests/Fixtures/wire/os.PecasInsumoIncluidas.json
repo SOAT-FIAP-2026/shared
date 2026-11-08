@@ -1,0 +1,15 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.PecasInsumoIncluidas",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "idSaga": "string",
+    "ocorridoEm": "string",
+    "pecasInsumosIds": [
+      "string"
+    ],
+    "tipoEvento": "string"
+  }
+}

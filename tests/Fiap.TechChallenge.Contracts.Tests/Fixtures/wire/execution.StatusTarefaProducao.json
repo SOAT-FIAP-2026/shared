@@ -1,0 +1,21 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Domain:Fiap.TechChallenge.Execution.Domain.Aggregates.OrdemProducaoAggregate.StatusTarefaProducao",
+  "valores": [
+    {
+      "nome": "Pendente",
+      "valor": 1
+    },
+    {
+      "nome": "EmExecucao",
+      "valor": 2
+    },
+    {
+      "nome": "Concluida",
+      "valor": 3
+    },
+    {
+      "nome": "Interrompida",
+      "valor": 4
+    }
+  ]
+}

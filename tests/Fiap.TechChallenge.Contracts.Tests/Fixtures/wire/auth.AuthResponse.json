@@ -1,0 +1,9 @@
+{
+  "fonte": "Fiap.TechChallenge.LambdaAuth:Fiap.TechChallenge.LambdaAuth.Models.AuthResponse",
+  "opcoes": "PadraoDotNet",
+  "forma": {
+    "access_token": "string",
+    "expires_in": "number",
+    "token_type": "string"
+  }
+}

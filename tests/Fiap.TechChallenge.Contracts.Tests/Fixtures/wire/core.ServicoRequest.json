@@ -1,0 +1,10 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Requests.ServicoRequest",
+  "opcoes": "Http",
+  "forma": {
+    "descricao": "string",
+    "nome": "string",
+    "tempoEstimadoMinutos": "number",
+    "valorUnitario": "number"
+  }
+}

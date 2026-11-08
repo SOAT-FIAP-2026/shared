@@ -1,0 +1,17 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.TarefaProducaoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "dataHoraFim": "string?",
+    "dataHoraInicio": "string?",
+    "descricao": "string",
+    "duracaoRealMinutos": "number?",
+    "id": "string",
+    "idMecanicoResponsavel": "string?",
+    "idServicoOrigem": "string",
+    "nomeMecanicoResponsavel": "string?",
+    "observacoesTecnicas": "string?",
+    "status": "string",
+    "tempoEstimadoMinutos": "number"
+  }
+}

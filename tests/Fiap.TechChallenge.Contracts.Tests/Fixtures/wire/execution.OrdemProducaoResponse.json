@@ -1,0 +1,73 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.OrdemProducaoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "cliente": {
+      "idCliente": "string",
+      "nome": "string",
+      "telefone": "string?"
+    },
+    "dataAbertura": "string",
+    "dataConclusao": "string?",
+    "dataLiberacao": "string?",
+    "diagnostico": {
+      "$nullable": true,
+      "$forma": {
+        "dataHoraFim": "string?",
+        "dataHoraInicio": "string",
+        "duracaoMinutos": "number?",
+        "id": "string",
+        "idMecanico": "string",
+        "laudoTecnico": "string?",
+        "nomeMecanico": "string",
+        "pecasSugeridas": [
+          {
+            "descricao": "string?",
+            "idPeca": "string",
+            "quantidade": "number"
+          }
+        ],
+        "servicosSugeridos": [
+          {
+            "descricao": "string?",
+            "idServico": "string"
+          }
+        ]
+      }
+    },
+    "duracaoTotalTarefasMinutos": "number",
+    "filialId": "string?",
+    "historico": [
+      {
+        "dataHora": "string",
+        "descricao": "string",
+        "id": "string",
+        "status": "string"
+      }
+    ],
+    "id": "string",
+    "ordemServicoId": "string",
+    "status": "string",
+    "tarefas": [
+      {
+        "dataHoraFim": "string?",
+        "dataHoraInicio": "string?",
+        "descricao": "string",
+        "duracaoRealMinutos": "number?",
+        "id": "string",
+        "idMecanicoResponsavel": "string?",
+        "idServicoOrigem": "string",
+        "nomeMecanicoResponsavel": "string?",
+        "observacoesTecnicas": "string?",
+        "status": "string",
+        "tempoEstimadoMinutos": "number"
+      }
+    ],
+    "veiculo": {
+      "ano": "number",
+      "modelo": "string",
+      "placa": "string"
+    },
+    "versao": "number"
+  }
+}

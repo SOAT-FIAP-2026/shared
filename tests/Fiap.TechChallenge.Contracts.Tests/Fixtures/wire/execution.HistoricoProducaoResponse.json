@@ -1,0 +1,10 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.HistoricoProducaoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "dataHora": "string",
+    "descricao": "string",
+    "id": "string",
+    "status": "string"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.CompensacaoExecutada",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idCompensacao": "string",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "ocorridoEm": "string",
+    "origem": "string",
+    "tipo": "string",
+    "tipoEvento": "string"
+  }
+}
