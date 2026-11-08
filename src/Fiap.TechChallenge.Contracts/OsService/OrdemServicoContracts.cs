@@ -20,7 +20,18 @@ public static class OrdemServicoApiRoutes
     public const string IniciarServico = "api/v1/ordens-servico/{0}/servicos/{1}/iniciar";
     public const string FinalizarServico = "api/v1/ordens-servico/{0}/servicos/{1}/finalizar";
     public const string ConfirmarEntrega = "api/v1/ordens-servico/{0}/confirmar-entrega";
+
+    /// <summary>Health check exposto sob a base da API (<c>{"status":"Healthy"}</c>).</summary>
+    public const string Health = "api/v1/ordens-servico/health";
+
+    /// <summary>Query string de <see cref="AprovarOrcamento"/> (<c>PATCH</c>): <c>?aprovado=true|false</c>; ausente vale <c>false</c>.</summary>
+    public const string ParametroAprovado = "aprovado";
 }
+
+/// <summary>
+/// Resposta <c>201</c> de <c>POST api/v1/ordens-servico</c> (hoje um objeto anônimo em <c>OrdemServicoEndpoints</c>).
+/// </summary>
+public sealed record OrdemServicoCriadaResponse(Guid Id, bool ClienteNotificado);
 
 public sealed record OrdemServicoRequest(
     Guid ClienteId = default,

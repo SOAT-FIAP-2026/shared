@@ -4,6 +4,7 @@ namespace Fiap.TechChallenge.Contracts.Events;
 public record ClienteInfo(Guid IdCliente, string Nome, string? Telefone, string? Email = null);
 
 /// <summary>Contrato de cliente compatível com o execution-service.</summary>
+/// <remarks>Não trafega hoje: nenhum serviço usa este tipo (o execution-service lê <see cref="ClienteInfo"/>).</remarks>
 public sealed record ClienteContrato(Guid IdCliente, string Nome, string? Telefone)
     : ClienteInfo(IdCliente, Nome, Telefone);
 
@@ -11,6 +12,7 @@ public sealed record ClienteContrato(Guid IdCliente, string Nome, string? Telefo
 public record VeiculoInfo(string Placa, string Modelo, int Ano);
 
 /// <summary>Contrato de veículo compatível com o execution-service.</summary>
+/// <remarks>Não trafega hoje: nenhum serviço usa este tipo (o execution-service lê <see cref="VeiculoInfo"/>).</remarks>
 public sealed record VeiculoContrato(string Placa, string Modelo, int Ano)
     : VeiculoInfo(Placa, Modelo, Ano);
 
@@ -22,10 +24,12 @@ public record TarefaInfo(Guid IdServico, string Descricao, int TempoEstimadoMinu
 }
 
 /// <summary>Contrato de tarefa compatível com o execution-service.</summary>
+/// <remarks>Não trafega hoje: nenhum serviço usa este tipo; no fio vai <see cref="TarefaInfo"/>, que precisa de <c>idServico</c>.</remarks>
 public sealed record TarefaItemContrato(Guid IdServicoOrigem, string Descricao, int TempoEstimadoMinutos)
     : TarefaInfo(IdServicoOrigem, Descricao, TempoEstimadoMinutos);
 
 /// <summary>Item precificado (serviço ou peça/insumo) enviado para geração do orçamento no Billing Service.</summary>
+/// <remarks>Só aparece em <see cref="DiagnosticoFinalizadoEvent"/>, que não tem produtor hoje.</remarks>
 public sealed record ItemOrcamentoInfo(Guid IdItem, string TipoItem, string Descricao, int Quantidade, decimal ValorUnitario)
 {
     public decimal ValorTotal => Math.Round(Quantidade * ValorUnitario, 2);

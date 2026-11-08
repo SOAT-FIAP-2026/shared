@@ -44,6 +44,7 @@ public sealed record OrdemServicoAbertaEvent : IntegrationEvent
 /// ou na Saga de reserva de estoque junto ao <c>fase1-tech-challenge</c> (Core).
 /// Consumido pelo <c>execution-service</c> para retornar a ordem ao status <c>EM_DIAGNOSTICO</c>.
 /// </summary>
+/// <remarks>Não trafega hoje: nenhum serviço publica este evento (o execution-service consome).</remarks>
 public sealed record DiagnosticoRejeitadoEvent : IntegrationEvent
 {
     public required string Motivo { get; init; }
@@ -66,6 +67,7 @@ public sealed record DiagnosticoRejeitadoEvent : IntegrationEvent
 /// reservar as peças no estoque e calcular o valor da OS (status <c>AGUARDANDO_APROVACAO</c>).
 /// Consumido pelo <c>billing-service</c> para gerar o orçamento e disponibilizar a cobrança Mercado Pago.
 /// </summary>
+/// <remarks>Não trafega hoje: nenhum serviço publica este evento (o billing-service consome). O finalizar-diagnóstico do OS emite só <c>StatusOrdemServicoAlterado</c>; o billing gera orçamento a partir de <c>DiagnosticoTecnicoConcluidoEvent</c> com preços fixos.</remarks>
 public sealed record DiagnosticoFinalizadoEvent : IntegrationEvent
 {
     public required IReadOnlyList<ItemOrcamentoInfo> Itens { get; init; }
