@@ -19,7 +19,16 @@ public sealed record CriarBoletoRequest(
     string Email,
     string Nome,
     string Sobrenome,
-    string Cpf);
+    string Cpf,
+    EnderecoBoletoRequest? Endereco = null);
+
+public sealed record EnderecoBoletoRequest(
+    string Cep,
+    string Logradouro,
+    string Numero,
+    string Bairro,
+    string Cidade,
+    string Estado);
 
 public sealed record BoletoResponse(
     Guid PagamentoId,
