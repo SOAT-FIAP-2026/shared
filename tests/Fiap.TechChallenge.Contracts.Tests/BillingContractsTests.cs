@@ -29,19 +29,21 @@ public class BillingContractsTests
         MetodoPagamentoContrato.CartaoCredito.ToString().Should().Be("CartaoCredito");
         MetodoPagamentoContrato.Boleto.ToString().Should().Be("Boleto");
 
-        StatusPagamentoContrato.Pendente.ToString().Should().Be("Pendente");
-        StatusPagamentoContrato.Aprovado.ToString().Should().Be("Aprovado");
-        StatusPagamentoContrato.Recusado.ToString().Should().Be("Recusado");
-        StatusPagamentoContrato.Expirado.ToString().Should().Be("Expirado");
-        StatusPagamentoContrato.Estornado.ToString().Should().Be("Estornado");
+        ((int)StatusPagamentoContrato.Pendente).Should().Be(0);
+        ((int)StatusPagamentoContrato.Aprovado).Should().Be(1);
+        ((int)StatusPagamentoContrato.Rejeitado).Should().Be(2);
+        ((int)StatusPagamentoContrato.Cancelado).Should().Be(3);
+        ((int)StatusPagamentoContrato.Expirado).Should().Be(4);
     }
 
     [Fact]
     public void CriarBoletoRequest_e_BoletoResponse_devem_serializar_corretamente()
     {
         var orcamentoId = Guid.NewGuid();
-        var req = new CriarBoletoRequest(orcamentoId, "cliente@email.com", "Lucas", "Moraes", "12345678901");
+        var endereco = new EnderecoBoletoRequest("01001000", "Praça da Sé", "1", "Sé", "São Paulo", "SP");
+        var req = new CriarBoletoRequest(orcamentoId, "cliente@email.com", "Lucas", "Moraes", "12345678901", endereco);
         req.IdOrcamento.Should().Be(orcamentoId);
+        req.Endereco.Should().Be(endereco);
         req.Email.Should().Be("cliente@email.com");
         req.Nome.Should().Be("Lucas");
         req.Sobrenome.Should().Be("Moraes");
@@ -97,7 +99,7 @@ public class BillingContractsTests
         var webhook = new MercadoPagoWebhookRequest("payment.created", "payment", new MercadoPagoWebhookData("123456789"));
         webhook.Action.Should().Be("payment.created");
         webhook.Type.Should().Be("payment");
-        webhook.Data.Id.Should().Be("123456789");
+        webhook.Data!.Id.Should().Be("123456789");
 
         var json = JsonSerializer.Serialize(webhook, JsonOptions);
         var copy = JsonSerializer.Deserialize<MercadoPagoWebhookRequest>(json, JsonOptions);
