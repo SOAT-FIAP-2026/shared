@@ -1,0 +1,53 @@
+name: E2E (manual)
+
+# Os testes BDD de ponta a ponta precisam dos microsserviços e do emulador AWS no ar.
+# Rode manualmente apontando para um ambiente acessível pelo runner.
+on:
+  workflow_dispatch:
+    inputs:
+      core_api_url:
+        description: "URL do Core (fase1-tech-challenge)"
+        required: true
+        default: "http://localhost:8080"
+      os_api_url:
+        description: "URL do os-microservice"
+        required: true
+        default: "http://localhost:8083"
+      execution_api_url:
+        description: "URL do execution-service"
+        required: true
+        default: "http://localhost:8082"
+      billing_api_url:
+        description: "URL do billing-service"
+        required: true
+        default: "http://localhost:8081"
+      floci_url:
+        description: "URL do emulador AWS (Floci)"
+        required: true
+        default: "http://localhost:4566"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Test E2E
+        env:
+          Urls__CoreApi: ${{ inputs.core_api_url }}
+          Urls__OsApi: ${{ inputs.os_api_url }}
+          Urls__ExecutionApi: ${{ inputs.execution_api_url }}
+          Urls__BillingApi: ${{ inputs.billing_api_url }}
+          Urls__Floci: ${{ inputs.floci_url }}
+        run: dotnet test tests/Fiap.TechChallenge.E2ETests/Fiap.TechChallenge.E2ETests.csproj -c Release --verbosity normal
