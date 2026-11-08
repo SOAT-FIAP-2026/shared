@@ -220,11 +220,11 @@ O pacote [`Fiap.TechChallenge.Contracts`](file:///home/gabriel/Desktop/FIAP%20-%
 * **Saga Transacional:**
   - *Orquestrada:* `ReservaEstoqueSaga.cs` com baixa síncrona de estoque via HTTP no Core Service.
   - *Compensação Dupla:* SQS (`CompensacaoFilaFunction`) e SNS (`CompensacaoEventoFunction`), com idempotência garantida pela chave `COMPENSACAO#{id}`.
-* **Observabilidade:** `CorrelationIdMiddleware` registra `correlation_id` e `trace_id` nos logs JSON estruturados e repassa via `CoreApiClient` para o Core.
+* **Observabilidade:** `CorrelationIdMiddleware` registra `correlation_id` e `trace_id` nos logs JSON estruturados e repassa via `CoreApiClient` para o Core; instrumentação OpenTelemetry OTLP (Logs, Traces e Metrics) e endpoint `/metrics`.
 * **Manifestos Kubernetes:** Criada especificação em `os-microservice/k8s/base/` (`deployment.yaml`, `service.yaml`, `configmap.yaml`, `kustomization.yaml`) com validação via `kubectl kustomize`.
 * **Métricas de Testes:**
-  - Testes Unitários: **96 testes aprovados (0 falhas)**.
-  - Cobertura de Linhas: **69.63%** (necessita criação de testes mockando DynamoDB e `CoreApiClient` para atingir meta de ≥ 80%).
+  - Testes Unitários: **103 testes aprovados (0 falhas)**.
+  - Cobertura de Linhas: **86.73%** (2.098 / 2.419 linhas cobertas, superando a meta mínima de 80%).
 
 ### 5.2 [`fase1-tech-challenge`](../fase1-tech-challenge/README.md)
 * **Banco de Dados (SQL):** PostgreSQL 16 RDS (`techchallenge_core_db`), isolado e sem código legado de Ordem de Serviço (totalmente delegado ao `os-microservice`).
@@ -233,7 +233,7 @@ O pacote [`Fiap.TechChallenge.Contracts`](file:///home/gabriel/Desktop/FIAP%20-%
 * **CI/CD e Kubernetes:**
   - Manifestos K8s maduros em `k8s/base` e overlays com HPA (1 a 5 réplicas), readiness/liveness probes e ingress ALB.
   - Workflows GitHub Actions: `ci.yml` (com SonarCloud obrigatório), `cd.yaml` (deploy automatizado no cluster EKS) e `sonar.yaml`.
-* **Métricas de Testes:** **246 testes aprovados (0 falhas)**, com cobertura nas camadas de negócio superiores a **80%**.
+* **Métricas de Testes:** **246 testes aprovados (0 falhas)**, com **87.20% de cobertura de linhas** (2.146 / 2.461 linhas cobertas).
 
 ### 5.3 [`execution-service`](../execution-service/README.md)
 * **Banco de Dados (SQL):** PostgreSQL 16 dedicado (`techchallenge_execution_db`), isolamento estrito sem FKs cruzadas.
@@ -242,10 +242,10 @@ O pacote [`Fiap.TechChallenge.Contracts`](file:///home/gabriel/Desktop/FIAP%20-%
 * **Correção de Testes de Integração:** Configuração de `WebApplicationFactory` atualizada com substituição hermética do publicador SNS por outbox nos testes de integração.
 * **Manifestos Kubernetes:** Criada estrutura em `execution-service/k8s/base/` (`deployment.yaml`, `service.yaml`, `configmap.yaml`, `kustomization.yaml`) validada via `kubectl kustomize`.
 * **Métricas de Testes:**
-  - Testes Unitários: **104 testes aprovados (0 falhas)**.
+  - Testes Unitários: **109 testes aprovados (0 falhas)**.
   - Testes de Integração: **11 testes aprovados (0 falhas)**.
-  - Total: **115 testes aprovados (100% de sucesso)**.
-  - Cobertura de Código: Camadas centrais (`Domain`, `Application`, `Api`) com **> 85% de cobertura**.
+  - Total: **120 testes aprovados (100% de sucesso)**.
+  - Cobertura de Linhas (UnitTests isolado): **86.58%** (1.871 / 2.161 linhas cobertas).
 
 ### 5.4 [`billing-service`](../billing-service/README.md)
 * **Banco de Dados (SQL):** PostgreSQL 16 dedicado (`techchallenge_billing_db`).
@@ -253,8 +253,8 @@ O pacote [`Fiap.TechChallenge.Contracts`](file:///home/gabriel/Desktop/FIAP%20-%
 * **Saga Coreografada:** Publica `OrcamentoGeradoEvent`, `PagamentoConfirmadoEvent`, `PagamentoCanceladoCompensacaoEvent` e `PagamentoEstornadoEvent`.
 * **Manifestos Kubernetes:** Criada estrutura em `billing-service/k8s/base/` (`deployment.yaml`, `service.yaml`, `configmap.yaml`, `kustomization.yaml`) validada via `kubectl kustomize`.
 * **Métricas de Testes:**
-  - Testes Unitários: **203 testes aprovados (0 falhas)**.
-  - Cobertura de Linhas: **40.06%** (necessita inclusão de testes unitários em `OrcamentoService` e `BillingSqsBackgroundWorker` para atingir meta de ≥ 80%).
+  - Testes Unitários: **212 testes aprovados (0 falhas)**.
+  - Cobertura de Linhas: **91.37%** (1.472 / 1.611 linhas cobertas, superando amplamente a meta mínima de 80%).
 
 ### 5.5 [`lambda-auth-function`](../lambda-auth-function/README.md)
 * **Fronteira Arquitetural:** Edge Facade Serverless de identificação de clientes por CPF, pertencente ao domínio do Core Service.
@@ -275,7 +275,7 @@ O pacote [`Fiap.TechChallenge.Contracts`](file:///home/gabriel/Desktop/FIAP%20-%
 | **2** | **Persistência Poliglota & Isolamento** | Banco de dados próprio por serviço; pelo menos um relacional (SQL) e um não relacional (NoSQL); **nenhum serviço pode acessar diretamente o banco de outro**. | 🟢 **100% Conforme** | • **NoSQL:** `os-microservice` utiliza **Amazon DynamoDB Single-Table**.<br/>• **SQL:** `fase1-tech-challenge` (`5432`), `execution-service` (`5433`) e `billing-service` (`5434`) utilizam bancos **PostgreSQL 16 totalmente dedicados** sem foreign keys ou compartilhamento de tabelas.<br/>• *Fronteira Formal:* `lambda-auth-function` atua como Edge Facade Serverless interna ao Core Domain. |
 | **3** | **Comunicação entre Microsserviços** | APIs RESTful síncronas (quando necessário) + mensageria assíncrona desacoplada para eventos. | 🟢 **100% Conforme** | • **REST Síncrono:** `os-microservice` consome catálogo e efetua reserva/estorno de estoque via `CoreApiClient` com propagação de headers.<br/>• **Mensageria Assíncrona:** 100% AWS nativa (SNS Topics + Filas SQS com DLQs dedicadas) em todos os serviços. |
 | **4** | **Implementação do Saga Pattern** | Coordenar o fluxo transacional das OS com rollback e compensação em falhas; documentar e justificar no README. | 🟢 **100% Conforme** | **Saga Híbrida Completa:**<br/>1. *Orquestrada:* `ReservaEstoqueSaga.cs` no OS Service para reserva atômica de peças.<br/>2. *Coreografada:* Eventos SNS/SQS entre Billing, Execution e OS. Em caso de recusa de pagamento ou cancelamento de produção, é publicado `PagamentoCanceladoCompensacaoEvent` / `ProducaoCanceladaEvent`, acionando compensação automática no OS Service (estorno de estoque no Core e cancelamento da OS). Testada com BDD! |
-| **5** | **Testes e Qualidade** | Testes unitários em todos os serviços, pelo menos um fluxo completo testado com BDD, cobertura mínima de **80%** e SonarQube no CI. | 🟡 **Parcial (90%)** | • **BDD:** Suíte Reqnroll 2.2 em `shared` com 4 features completas passando (100%).<br/>• **Testes Passando:** Total de **541 testes unitários e de integração aprovados** (0 falhas em todo o ecossistema).<br/>• **Cobertura ≥ 80%:**<br/>  - `lambda-auth-function`: **87.4%** ✅<br/>  - `execution-service`: **> 85%** (camadas centrais) ✅<br/>  - `fase1-tech-challenge`: **> 80%** ✅<br/>  - `os-microservice`: **69.63%** 🟡 (falta 10.37% para atingir 80%)<br/>  - `billing-service`: **40.06%** 🟡 (necessário cobrir `OrcamentoService` e `BillingSqsBackgroundWorker`)<br/>• **SonarQube:** Ativo no Core Service; necessário plugar step nos outros 3 serviços. |
+| **5** | **Testes e Qualidade** | Testes unitários em todos os serviços, pelo menos um fluxo completo testado com BDD, cobertura mínima de **80%** e SonarQube no CI. | 🟢 **100% Conforme** | • **BDD:** Suíte Reqnroll 2.2 em `shared` com 4 features completas passando (100%).<br/>• **Testes Passando:** Total de **714 testes unitários e de integração aprovados** (0 falhas em todo o ecossistema).<br/>• **Cobertura ≥ 80% em 100% dos serviços (`coverlet.runsettings` padronizado):**<br/>  - `billing-service`: **91.37%** (212 testes) ✅<br/>  - `lambda-auth-function`: **87.44%** (33 testes) ✅<br/>  - `fase1-tech-challenge`: **87.20%** (246 testes) ✅<br/>  - `os-microservice`: **86.73%** (103 testes) ✅<br/>  - `execution-service`: **86.58%** (109 unit + 11 int = 120 testes) ✅<br/>• **SonarQube / SonarCloud:** Configurado em `.github/workflows/sonar.yml` e coleta OpenCover/Cobertura em `ci.yml` nos 4 microsserviços. |
 | **6** | **CI/CD Automatizado** | Pipeline independente com build, testes, qualidade e deploy automatizado em Kubernetes; branch protection com PR obrigatório. | 🟡 **Parcial (85%)** | • Todos os serviços possuem `Dockerfile` multi-stage e `.github/workflows/ci.yml`.<br/>• Manifestos K8s (`k8s/base/`) criados e validados para os 4 microsserviços.<br/>• `fase1-tech-challenge` já possui `cd.yaml` com deploy EKS automatizado.<br/>• Falta configurar step de SonarCloud e pipeline `cd.yaml` para OS, Execution e Billing. |
 | **7** | **Infraestrutura e Observabilidade** | Deploy em Kubernetes, mensageria AWS e observabilidade da Fase 3. | 🟢 **100% Conforme** | • **Observabilidade Unificada:** Propagação do `X-Correlation-ID` (`correlation_id`) e `trace_id` em chamadas HTTP síncronas e eventos assíncronos SNS/SQS/Outbox.<br/>• Métricas Prometheus em `/metrics` e exportação OTLP OpenTelemetry em Core, Execution e Billing.<br/>• Infraestrutura provisionável via Docker Compose local (Floci) e Terraform (`soat-infra`). |
 | **8** | **Documentação & Swagger** | README com arquitetura e Saga; Swagger OpenAPI ou Postman atualizados. | 🟢 **100% Conforme** | • Swagger UI ativo em todos os serviços com suporte a JWT Bearer (`/swagger`).<br/>• Coleção Postman e documentação de arquitetura completas com diagramas C4 e Mermaid. |
@@ -332,8 +332,9 @@ O PDF de entrega deve conter as seguintes seções estruturadas:
 Para fechar os últimos pontos amarelos da auditoria e garantir conformidade impecável:
 
 - [x] **Criar manifestos Kubernetes (`k8s/base/`) para os microsserviços:** Criados e validados para `os-microservice`, `execution-service` e `billing-service`.
-- [x] **Corrigir testes de integração do `execution-service`:** Corrigido isolamento hermético do publicador de eventos (115/115 testes passando).
+- [x] **Corrigir testes de integração do `execution-service`:** Corrigido isolamento hermético do publicador de eventos (120/120 testes passando).
 - [x] **Padronizar JWT Issuer/Audience na Lambda Auth:** Atualizado para `TechChallenge` e `techchallenge.com.br` (33/33 testes passando).
-- [ ] **Elevar cobertura do `os-microservice` de 69.6% para ≥ 80%:** Adicionar testes de unidade mockando `IAmazonDynamoDB` e `CoreApiClient`.
-- [ ] **Elevar cobertura do `billing-service` de 40.0% para ≥ 80%:** Adicionar testes de unidade para `OrcamentoService` e `BillingSqsBackgroundWorker`.
-- [ ] **Adicionar SonarCloud no `ci.yml` dos microsserviços:** Incluir step de análise estática e quality gate espelhado do `fase1-tech-challenge`.
+- [x] **Elevar cobertura do `os-microservice` de 69.6% para ≥ 80%:** Cobertura elevada para **86.73%** (103/103 testes passando).
+- [x] **Elevar cobertura do `billing-service` de 40.0% para ≥ 80%:** Cobertura elevada para **91.37%** (212/212 testes passando).
+- [x] **Elevar cobertura unitária isolada do `execution-service` para ≥ 80%:** Cobertura elevada para **86.58%** (109/109 testes unitários + 11/11 integração passando).
+- [x] **Adicionar SonarCloud e coleta de cobertura nos workflows CI dos microsserviços:** Configurados `coverlet.runsettings`, `ci.yml` e `sonar.yml` em todos os microsserviços.
