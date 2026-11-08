@@ -138,6 +138,7 @@ public sealed record OrdemServicoCanceladaEvent : IntegrationEvent
 /// Publicado pelo <c>os-microservice</c> quando o cliente reprova o orçamento.
 /// Dispara o estorno das peças reservadas no estoque do Core (<c>fase1-tech-challenge</c>).
 /// </summary>
+/// <remarks>Não trafega hoje: o os-microservice publica <see cref="Fiap.TechChallenge.Contracts.OsService.DomainEvents.OrcamentoReprovado"/> via outbox.</remarks>
 public sealed record OrcamentoReprovadoEvent : IntegrationEvent
 {
     public required IReadOnlyList<Guid> PecasInsumosIds { get; init; }
@@ -155,6 +156,7 @@ public sealed record OrcamentoReprovadoEvent : IntegrationEvent
 /// <summary>
 /// Publicado pelo <c>os-microservice</c> ao concluir a Saga de reserva de peças/insumos no estoque.
 /// </summary>
+/// <remarks>Não trafega hoje: o os-microservice publica <see cref="Fiap.TechChallenge.Contracts.OsService.DomainEvents.PecasInsumoIncluidas"/> via outbox.</remarks>
 public sealed record PecasInsumoIncluidasEvent : IntegrationEvent
 {
     public required Guid IdSaga { get; init; }
@@ -174,6 +176,7 @@ public sealed record PecasInsumoIncluidasEvent : IntegrationEvent
 /// <summary>
 /// Publicado pelo <c>os-microservice</c> a cada mudança de status da Ordem de Serviço.
 /// </summary>
+/// <remarks>Não trafega hoje: o os-microservice publica <see cref="Fiap.TechChallenge.Contracts.OsService.DomainEvents.StatusOrdemServicoAlterado"/> via outbox.</remarks>
 public sealed record StatusOrdemServicoAlteradoEvent : IntegrationEvent
 {
     public required string StatusAnterior { get; init; }
@@ -193,6 +196,7 @@ public sealed record StatusOrdemServicoAlteradoEvent : IntegrationEvent
 /// <summary>
 /// Publicado pelo <c>os-microservice</c> ao concluir uma etapa da Saga de compensação.
 /// </summary>
+/// <remarks>Não trafega hoje: o os-microservice publica <see cref="Fiap.TechChallenge.Contracts.OsService.DomainEvents.CompensacaoExecutada"/> via outbox.</remarks>
 public sealed record CompensacaoExecutadaEvent : IntegrationEvent
 {
     public required string IdCompensacao { get; init; }
