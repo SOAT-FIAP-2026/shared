@@ -1,6 +1,7 @@
 namespace Fiap.TechChallenge.Contracts.Events;
 
 /// <summary>Serviço sugerido pelo mecânico no laudo diagnóstico (ID do catálogo do Core Service).</summary>
+/// <remarks>Nos eventos, listas são serializadas pelo tipo declarado (este), não pela subclasse <c>*ItemEvent</c>.</remarks>
 public record ServicoSugeridoInfo(Guid IdServico, string? Descricao = null);
 
 /// <summary>Compatibilidade com o modelo de item sugerido utilizado no execution-service.</summary>
@@ -8,6 +9,7 @@ public sealed record ServicoSugeridoItemEvent(Guid IdServico, string? Descricao 
     : ServicoSugeridoInfo(IdServico, Descricao);
 
 /// <summary>Peça/insumo sugerido pelo mecânico no laudo diagnóstico (ID do catálogo do Core Service).</summary>
+/// <remarks>Nos eventos, listas são serializadas pelo tipo declarado (este), não pela subclasse <c>*ItemEvent</c>.</remarks>
 public record PecaSugeridaInfo(Guid IdPeca, int Quantidade, string? Descricao = null);
 
 /// <summary>Compatibilidade com o modelo de peça sugerida utilizado no execution-service.</summary>
