@@ -172,6 +172,8 @@ Contratos que não trafegam hoje continuam no pacote com `<remarks>Não trafega 
 - **Link de pagamento:** `OrcamentoGeradoEvent.LinkPagamento` aponta para `api/v1/pagamento/checkout/{id}`, que não existe.
 - **Estoque:** os endpoints de ajuste recebem um número JSON cru, não `AjustarQuantidadeEstoqueRequest`.
 
+O que falta para os serviços usarem o `shared` como fonte única (cópias locais, divergências, contratos sem tráfego): [`PENDENCIAS_CONTRATOS.md`](PENDENCIAS_CONTRATOS.md).
+
 ### Como regenerar as fixtures
 
 As fixtures em `tests/Fiap.TechChallenge.Contracts.Tests/Fixtures/wire/` são geradas a partir dos tipos reais dos serviços, com os repositórios lado a lado em `../`:
