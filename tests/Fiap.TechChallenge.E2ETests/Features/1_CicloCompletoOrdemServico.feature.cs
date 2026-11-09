@@ -26,10 +26,10 @@ namespace Fiap.TechChallenge.E2ETests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Ciclo de Vida Completo da Ordem de Serviço", "  Como um atendente e mecânico da oficina mecânica\n  Quero abrir, diagnosticar, o" +
-                "rçar, executar tarefas e entregar uma Ordem de Serviço\n  Para validar a integraç" +
-                "ão ponta a ponta e a persistência em múltiplos bancos de dados (DynamoDB e Postg" +
-                "reSQL)", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Ciclo de Vida Completo da Ordem de Serviço", "  Como um atendente e mecânico da oficina mecânica\r\n  Quero abrir, diagnosticar, " +
+                "orçar, executar tarefas e entregar uma Ordem de Serviço\r\n  Para validar a integr" +
+                "ação ponta a ponta e a persistência em múltiplos bancos de dados (DynamoDB e Pos" +
+                "tgreSQL)", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         

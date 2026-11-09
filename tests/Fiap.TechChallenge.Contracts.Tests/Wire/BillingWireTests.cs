@@ -25,11 +25,13 @@ public class BillingWireTests
         WireFixture.DeveEspelhar<OrcamentoResponse>("billing.Orcamento", WireJsonOptions.Http);
 
     [Fact]
-    public void CriarBoletoRequest_exige_endereco()
+    public void CriarBoletoRequest_endereco_continua_opcional_no_binding()
     {
+        // O billing faz binding direto deste tipo com [ApiController]: um Endereco não-nulável viraria
+        // [Required] implícito e trocaria o 400 ErrorResponse do serviço por um 400 ValidationProblem.
         var forma = WireShape.Extrair(typeof(CriarBoletoRequest), WireJsonOptions.Http);
 
-        forma["endereco"]!.GetValueKind().Should().Be(JsonValueKind.Object);
+        forma["endereco"]!["$nullable"]!.GetValue<bool>().Should().BeTrue();
     }
 
     [Fact]

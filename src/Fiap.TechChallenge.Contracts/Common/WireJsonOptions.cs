@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace Fiap.TechChallenge.Contracts.Common;
 
@@ -37,8 +36,9 @@ public static class WireJsonOptions
 
     private static JsonSerializerOptions Congelar(JsonSerializerOptions opcoes)
     {
-        opcoes.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
-        opcoes.MakeReadOnly();
+        // populateMissingResolver usa o resolver padrão já congelado: um DefaultJsonTypeInfoResolver novo
+        // deixaria a lista Modifiers aberta até o primeiro uso.
+        opcoes.MakeReadOnly(populateMissingResolver: true);
         return opcoes;
     }
 }

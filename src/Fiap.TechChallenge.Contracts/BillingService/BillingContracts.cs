@@ -44,15 +44,20 @@ public static class BillingApiRoutes
     public const string Ping = "api/ping";
 }
 
-/// <summary>Pedido de boleto. <see cref="Endereco"/> é obrigatório: sem ele o billing devolve 400.</summary>
-/// <remarks>Se algum campo do endereço vier em branco, o endereço é omitido na chamada ao Mercado Pago.</remarks>
+/// <summary>Pedido de boleto, recebido direto pelo <c>PagamentoController</c> do billing.</summary>
+/// <remarks>
+/// <see cref="Endereco"/> é opcional no contrato, mas o billing devolve 400 (<c>ErrorResponse</c>) quando ele falta
+/// e o orçamento existe. Continua anulável de propósito: como o billing faz binding deste tipo com
+/// <c>[ApiController]</c>, um campo não-nulável viraria <c>[Required]</c> implícito e mudaria a resposta para
+/// <c>ValidationProblem</c>. Se algum campo do endereço vier em branco, o endereço é omitido na chamada ao Mercado Pago.
+/// </remarks>
 public sealed record CriarBoletoRequest(
     Guid IdOrcamento,
     string Email,
     string Nome,
     string Sobrenome,
     string Cpf,
-    EnderecoBoletoRequest Endereco);
+    EnderecoBoletoRequest? Endereco = null);
 
 public sealed record EnderecoBoletoRequest(
     string Cep,

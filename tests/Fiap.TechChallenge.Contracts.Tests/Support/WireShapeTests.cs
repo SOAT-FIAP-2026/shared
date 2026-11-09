@@ -1,5 +1,7 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Fiap.TechChallenge.Contracts.Common;
 using FluentAssertions;
 
@@ -87,5 +89,19 @@ public class WireShapeTests
         WireJsonOptions.OsEventos.IsReadOnly.Should().BeTrue();
         WireJsonOptions.PadraoDotNet.IsReadOnly.Should().BeTrue();
         WireJsonOptions.Http.IsReadOnly.Should().BeTrue();
+    }
+
+    public static TheoryData<string> NomesOpcoes => new() { "OsEventos", "PadraoDotNet", "Http" };
+
+    [Theory]
+    [MemberData(nameof(NomesOpcoes))]
+    public void WireJsonOptions_resolver_nao_aceita_modificadores(string nome)
+    {
+        var opcoes = (JsonSerializerOptions)typeof(WireJsonOptions).GetProperty(nome)!.GetValue(null)!;
+        var resolver = opcoes.TypeInfoResolver.Should().BeAssignableTo<DefaultJsonTypeInfoResolver>().Subject;
+
+        var adicionar = () => resolver.Modifiers.Add(_ => { });
+
+        adicionar.Should().Throw<InvalidOperationException>();
     }
 }

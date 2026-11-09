@@ -26,9 +26,9 @@ namespace Fiap.TechChallenge.E2ETests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Compensação Transacional da Saga de Estoque", "  Como sistema distribuído da oficina mecânica\n  Quero garantir resiliência e int" +
-                "egridade quando ocorrerem falhas de validação ou cancelamento\n  Para evitar cons" +
-                "istência divergente entre a Ordem de Serviço e o Estoque do Core", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Compensação Transacional da Saga de Estoque", "  Como sistema distribuído da oficina mecânica\r\n  Quero garantir resiliência e in" +
+                "tegridade quando ocorrerem falhas de validação ou cancelamento\r\n  Para evitar co" +
+                "nsistência divergente entre a Ordem de Serviço e o Estoque do Core", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
