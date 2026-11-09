@@ -85,49 +85,102 @@ flowchart TB
 
 ---
 
-## 📁 Estrutura de Pastas dos Contratos (Separados por Serviço)
+## 📁 Estrutura de Pastas dos Contratos
+
+O pacote **espelha os contratos que os serviços trocam hoje** (versão `2.0.0`). A fonte da verdade é o código de quem publica o evento ou expõe a rota; o `shared` copia esse formato. Design: [`docs/superpowers/specs/2026-11-08-espelho-contratos-design.md`](docs/superpowers/specs/2026-11-08-espelho-contratos-design.md).
 
 ```text
 shared/
 ├── src/Fiap.TechChallenge.Contracts/
-│   ├── Common/                           # Envelope base IntegrationEvent + atributos SNS/SQS
-│   │   ├── IntegrationEvent.cs
-│   │   └── SnsMessageAttributes.cs
-│   ├── OsService/                        # Contratos do os-microservice
-│   │   ├── OrdemServicoEvents.cs
-│   │   ├── OrdemServicoCommands.cs
-│   │   └── OrdemServicoModels.cs
-│   ├── ExecutionService/                 # Contratos do execution-service
-│   │   ├── ExecutionEvents.cs
-│   │   └── ExecutionModels.cs
-│   ├── BillingService/                   # Contratos do billing-service
-│   │   ├── BillingEvents.cs
-│   │   └── BillingModels.cs
-│   ├── CoreService/                      # Contratos do fase1-tech-challenge (Catálogo/Estoque)
-│   │   ├── CoreCatalogoContracts.cs
-│   │   └── CoreEstoqueEvents.cs
-│   └── AuthService/                      # Contratos da lambda-auth-function & JWT
-│       └── AuthContracts.cs
+│   ├── Common/          # IntegrationEvent, CorrelationContext, SnsMessageAttributes, paginação,
+│   │                    # ErrorResponse / ProblemDetailsResponse, WireJsonOptions
+│   ├── OsService/       # eventos IntegrationEvent, rotas, DTOs HTTP, status, comando de compensação
+│   │   └── DomainEvents/  # eventos do outbox (EventoDominio) — sub-namespace próprio
+│   ├── ExecutionService/  # eventos, rotas, requests, status de produção
+│   │   └── Responses/     # respostas HTTP — sub-namespace próprio
+│   ├── BillingService/  # eventos, rotas, boleto, orçamento, webhook Mercado Pago
+│   ├── CoreService/     # rotas e DTOs do fase1 (catálogo, estoque)
+│   └── AuthService/     # JWT (claims, roles, defaults), lambda-auth, login de staff
 ├── tests/
-│   ├── Fiap.TechChallenge.Contracts.Tests/    # Testes unitários dos contratos compartilhados
-│   └── Fiap.TechChallenge.E2ETests/          # Suíte E2E e BDD (Reqnroll/Gherkin) integrada
-├── floci/
-│   └── init/ready.d/01-init-aws.sh       # Provisiona DynamoDB, SNS, SQS e SSM no Floci
-├── docker-compose.yml                    # Orquestração local com Floci + Floci UI
+│   ├── Fiap.TechChallenge.Contracts.Tests/
+│   │   ├── Wire/            # testes de espelho (forma no fio vs fixture)
+│   │   ├── Support/         # WireShape, WireFixture
+│   │   └── Fixtures/wire/   # formas capturadas dos tipos reais dos serviços
+│   └── Fiap.TechChallenge.E2ETests/   # BDD (Reqnroll) — precisa da stack no ar
+├── floci/init/ready.d/01-init-aws.sh
+├── docker-compose.yml
 └── Fiap.TechChallenge.Contracts.sln
 ```
 
+Os sub-namespaces `OsService.DomainEvents` e `ExecutionService.Responses` existem porque os serviços têm tipos locais com os mesmos nomes; ficar fora dos namespaces que eles importam evita ambiguidade de compilação.
+
 ---
 
-## 📜 Matriz de Responsabilidades e Contratos por Serviço
+## 📜 Inventário de Contratos
 
-| Pasta / Serviço | Publica no SNS (`tipoEvento`) | Consome do SNS / SQS | Rotas REST Principais |
-|---|---|---|---|
-| **`OsService/`**<br/>(`os-microservice`) | `OrdemServicoAbertaEvent`<br/>`DiagnosticoRejeitadoEvent`<br/>`DiagnosticoFinalizadoEvent`<br/>`OrdemServicoLiberadaParaExecucaoEvent`<br/>`OrdemServicoCanceladaEvent`<br/>`OrcamentoReprovadoEvent`<br/>`PecasInsumoIncluidasEvent`<br/>`StatusOrdemServicoAlteradoEvent` | `DiagnosticoIniciadoEvent`<br/>`DiagnosticoTecnicoConcluidoEvent`<br/>`ProducaoIniciadaEvent`<br/>`ProducaoFinalizadaEvent`<br/>`ProducaoCanceladaEvent`<br/>`PagamentoConfirmadoEvent`<br/>`PagamentoRecusadoEvent`<br/>`PagamentoCanceladoCompensacaoEvent`<br/>`PagamentoEstornadoEvent`<br/>`ReservaEstoqueFalhouEvent`<br/>+ Fila SQS `ComandoCompensacaoContrato` | `POST /api/v1/ordens-servico`<br/>`GET /api/v1/ordens-servico`<br/>`GET /api/v1/ordens-servico/{id}`<br/>`GET /api/v1/ordens-servico/{id}/progresso`<br/>`PATCH /api/v1/ordens-servico/{id}/aprovar-orcamento`<br/>`PATCH /api/v1/ordens-servico/{id}/confirmar-entrega` |
-| **`ExecutionService/`**<br/>(`execution-service`) | `DiagnosticoIniciadoEvent`<br/>`DiagnosticoTecnicoConcluidoEvent`<br/>`ProducaoIniciadaEvent`<br/>`ProducaoFinalizadaEvent`<br/>`ProducaoCanceladaEvent` | `OrdemServicoAbertaEvent`<br/>`DiagnosticoRejeitadoEvent`<br/>`OrdemServicoLiberadaParaExecucaoEvent`<br/>`OrdemServicoCanceladaEvent` | `GET /api/v1/producao/diagnosticos/pendentes`<br/>`PATCH /api/v1/producao/{id}/diagnostico/iniciar`<br/>`POST /api/v1/producao/{id}/diagnostico/finalizar`<br/>`GET /api/v1/producao/fila`<br/>`PATCH /api/v1/producao/{id}/tarefas/{tid}/iniciar`<br/>`PATCH /api/v1/producao/{id}/tarefas/{tid}/finalizar`<br/>`POST /api/v1/producao/{id}/cancelar` |
-| **`BillingService/`**<br/>(`billing-service`) | `OrcamentoGeradoEvent`<br/>`PagamentoConfirmadoEvent`<br/>`PagamentoRecusadoEvent`<br/>`PagamentoCanceladoCompensacaoEvent`<br/>`PagamentoEstornadoEvent` | `DiagnosticoFinalizadoEvent`<br/>`ProducaoCanceladaEvent`<br/>`OrdemServicoCanceladaEvent` | `POST /api/v1/orcamento`<br/>`GET /api/v1/orcamento/{id}`<br/>`POST /api/v1/orcamento/{id}/enviar-orcamento`<br/>`POST /api/v1/pagamento`<br/>`GET /api/v1/pagamento/{id}`<br/>`POST /api/v1/pagamento/webhook` |
-| **`CoreService/`**<br/>(`fase1-tech-challenge`) | `ReservaEstoqueFalhouEvent` *(se assíncrono)* | Chamadas REST síncronas do `CoreApiClient` | `CRUD /api/v1/clientes`<br/>`CRUD /api/v1/veiculos`<br/>`CRUD /api/v1/servicos`<br/>`CRUD /api/v1/pecas-insumos`<br/>`PUT /api/v1/estoques/{id}/remover-quantidade`<br/>`PUT /api/v1/estoques/{id}/adicionar-quantidade`<br/>`POST /api/v1/autenticacao/login` |
-| **`AuthService/`**<br/>(`lambda-auth-function`) | — | — | `POST /auth/token` (`{ "cpf": "..." }`) |
+### Formatos de JSON em uso (`WireJsonOptions`)
+
+| Opção | Quem usa | Formato |
+|---|---|---|
+| `OsEventos` | eventos do `os-microservice` (outbox e publicação direta) | camelCase, nulos omitidos, enum como texto |
+| `PadraoDotNet` | eventos do `billing-service` e do `execution-service`; resposta do `lambda-auth` | PascalCase, nulos escritos, enum como número |
+| `Http` | APIs HTTP de todos os serviços | camelCase |
+
+### Eventos (SNS `techchallenge-eventos-<stage>`)
+
+| Evento (`tipoEvento`) | Tipo no `shared` | Produtor hoje | Consumidor(es) | Trafega? |
+|---|---|---|---|---|
+| `OrdemServicoCriada` | `OsService.DomainEvents.OrdemServicoCriada` | os (outbox) | execution (como alias de `OrdemServicoAbertaEvent`) | sim |
+| `StatusOrdemServicoAlterado` | `OsService.DomainEvents.StatusOrdemServicoAlterado` | os (outbox) | — | sim |
+| `PecasInsumoIncluidas` | `OsService.DomainEvents.PecasInsumoIncluidas` | os (outbox) | — | sim |
+| `OrcamentoReprovado` | `OsService.DomainEvents.OrcamentoReprovado` | os (outbox) | os `CompensacaoEventoFunction` | sim |
+| `OrdemServicoCancelada` | `OsService.DomainEvents.OrdemServicoCancelada` | os (outbox) | os `CompensacaoEventoFunction`, execution | sim |
+| `CompensacaoExecutada` | `OsService.DomainEvents.CompensacaoExecutada` | os (outbox) | — | sim |
+| `OrdemServicoAbertaEvent` | `Events.OrdemServicoAbertaEvent` | os (direto) | execution | sim |
+| `OrdemServicoLiberadaParaExecucaoEvent` | `Events.OrdemServicoLiberadaParaExecucaoEvent` | os (direto, 2×) | execution | sim |
+| `OrdemServicoCanceladaEvent` | `Events.OrdemServicoCanceladaEvent` | os (direto) | execution, billing, os | sim |
+| `DiagnosticoIniciadoEvent` | `Events.DiagnosticoIniciadoEvent` | execution | os | sim |
+| `DiagnosticoTecnicoConcluidoEvent` | `Events.DiagnosticoTecnicoConcluidoEvent` | execution | os, billing | sim |
+| `ProducaoIniciadaEvent` / `ProducaoFinalizadaEvent` | `Events.*` | execution | os | sim |
+| `ProducaoCanceladaEvent` | `Events.ProducaoCanceladaEvent` | execution | billing, os | sim |
+| `OrcamentoGeradoEvent` | `Events.OrcamentoGeradoEvent` | billing | os | sim |
+| `PagamentoConfirmadoEvent` | `Events.PagamentoConfirmadoEvent` | billing | os | sim |
+| `PagamentoCanceladoCompensacaoEvent` | `Events.PagamentoCanceladoCompensacaoEvent` | billing | os | sim |
+| `PagamentoEstornadoEvent` | `Events.PagamentoEstornadoEvent` | billing | — | sim |
+| `DiagnosticoFinalizadoEvent`, `DiagnosticoRejeitadoEvent`, `PagamentoRecusadoEvent`, `ReservaEstoqueFalhouEvent` | `Events.*` | — | têm consumidor | **não** |
+| `OrcamentoReprovadoEvent`, `PecasInsumoIncluidasEvent`, `StatusOrdemServicoAlteradoEvent`, `CompensacaoExecutadaEvent` | `Events.*` | — (o OS publica os de `DomainEvents`) | — | **não** |
+
+Fila SQS de compensação do OS: `ComandoCompensacaoContrato`, atributo `tipo` (`SnsMessageAttributes.TipoCompensacao`), interno ao `os-microservice`.
+
+### HTTP
+
+| Serviço | Rotas | Corpos |
+|---|---|---|
+| `fase1-tech-challenge` | `CoreApiRoutes` | `ClienteCatalogoDto`, `ClienteDetalhadoDto`, `VeiculoCatalogoDto`, `ServicoCatalogoDto`, `PecaInsumoCatalogoDto`, `ServicoMetricaTempoDto`, `IdCriadoResponse`, requests `Criar*`/`Atualizar*`, `Staff*`, `PagedResultContrato<T>`, `ErrorResponse` |
+| `os-microservice` | `OrdemServicoApiRoutes` | `OrdemServicoRequest`, `OrdemServicoResponse`, `OrdemServicoProgressoResponse`, `OrdemServicoCriadaResponse`, `ErrorResponse` |
+| `execution-service` | `ExecutionApiRoutes` | requests em `ExecutionService`, respostas em `ExecutionService.Responses`, `ProblemDetailsResponse` |
+| `billing-service` | `BillingApiRoutes` | `CriarBoletoRequest`, `BoletoResponse`, `GerarOrcamentoRequest`, `OrcamentoResponse`, `EnviarOrcamentoRequest`, `MercadoPagoWebhookRequest`, `ErrorResponse` |
+| `lambda-auth-function` | `JwtAuthConstants.LambdaAuth.Rota` | `AuthTokenRequest`, `AuthTokenResponse` (snake_case), `AuthErrorResponse` |
+
+Contratos que não trafegam hoje continuam no pacote com `<remarks>Não trafega hoje: …</remarks>` explicando o motivo.
+
+### Divergências conhecidas (resolver nos serviços, não aqui)
+
+- **Issuer/audience JWT:** lambda-auth e `soat-infra/environments/dev/main.tf` usam `fiap-tech-challenge`/`fiap-api`; os e execution validam `TechChallenge`/`techchallenge.com.br`. O token do lambda-auth também não tem role.
+- **Dois envelopes no mesmo tópico:** `EventoDominio` (`idOrdemServico`, `idEvento`, `ocorridoEm`, camelCase) e `IntegrationEvent` (`osId`, `eventId`, `occurredAt`; camelCase no OS, PascalCase no billing/execution).
+- **Nomes que ninguém emite:** o filtro SNS da compensação do OS espera `ReservaEstoqueFalhou` e `PagamentoRecusado`; o billing emite `PagamentoCanceladoCompensacaoEvent`.
+- **Link de pagamento:** `OrcamentoGeradoEvent.LinkPagamento` aponta para `api/v1/pagamento/checkout/{id}`, que não existe.
+- **Estoque:** os endpoints de ajuste recebem um número JSON cru, não `AjustarQuantidadeEstoqueRequest`.
+
+### Como regenerar as fixtures
+
+As fixtures em `tests/Fiap.TechChallenge.Contracts.Tests/Fixtures/wire/` são geradas a partir dos tipos reais dos serviços, com os repositórios lado a lado em `../`:
+
+1. Crie um console `net8.0` **fora deste repositório** com `<FrameworkReference Include="Microsoft.AspNetCore.App" />`, `ProjectReference` para `os-microservice/src/OrdemServico.Lambda`, `fase1-tech-challenge/src/Fiap.TechChallenge.Api`, `billing-service/src/Billing.Service.Api`, `execution-service/src/Fiap.TechChallenge.Execution.Api` e `lamdba-auth/src/Fiap.TechChallenge.LambdaAuth`, e `<Compile Include>` de `tests/.../Support/WireShape.cs`.
+2. Para cada tipo do serviço, grave `{ "fonte", "opcoes", "forma": WireShape.Extrair(tipo, WireJsonOptions.X) }` em `{area}.{Tipo}.json`; catálogos de status/enums vão em `valores`.
+3. Rode `dotnet test tests/Fiap.TechChallenge.Contracts.Tests`: qualquer diferença entre serviço e `shared` aparece como falha de espelho.
+
+Os serviços precisam compilar contra o `shared` usado na captura.
 
 ---
 
@@ -138,7 +191,7 @@ shared/
 ```bash
 cd shared
 dotnet build Fiap.TechChallenge.Contracts.sln
-dotnet test Fiap.TechChallenge.Contracts.sln
+dotnet test tests/Fiap.TechChallenge.Contracts.Tests   # E2E precisa da stack: ver seção 3
 ```
 
 ### 2. Subir a infraestrutura local (Floci + Floci UI + Bancos PostgreSQL + Serviços)

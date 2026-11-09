@@ -1,3 +1,5 @@
+> ⚠️ Desatualizado em 2026-11-08: afirmações de "zero duplicação" e "100% conforme" não refletem o código. Ver [docs/superpowers/specs/2026-11-08-espelho-contratos-design.md](docs/superpowers/specs/2026-11-08-espelho-contratos-design.md) e a seção "Inventário de Contratos" do README.
+
 # Relatório de Auditoria e Centralização de Contratos — Fase 4
 
 **Projeto:** FIAP Tech Challenge — Arquitetura de Microsserviços para Oficina Mecânica  
