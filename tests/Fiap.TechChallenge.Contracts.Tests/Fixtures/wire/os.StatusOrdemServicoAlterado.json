@@ -1,0 +1,13 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.StatusOrdemServicoAlterado",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "ocorridoEm": "string",
+    "statusAnterior": "string",
+    "statusAtual": "string",
+    "tipoEvento": "string"
+  }
+}

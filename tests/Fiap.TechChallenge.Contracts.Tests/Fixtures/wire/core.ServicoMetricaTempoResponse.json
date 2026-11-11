@@ -1,0 +1,11 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Responses.ServicoMetricaTempoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "idServico": "string",
+    "nome": "string",
+    "quantidadeExecucoes": "number",
+    "tempoEstimadoMinutos": "number",
+    "tempoMedioExecucaoMinutos": "number?"
+  }
+}

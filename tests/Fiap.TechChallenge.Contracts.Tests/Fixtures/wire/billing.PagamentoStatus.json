@@ -1,0 +1,25 @@
+{
+  "fonte": "Billing.Service.Domain:Billing.Service.Domain.Entities.PagamentoStatus",
+  "valores": [
+    {
+      "nome": "Pendente",
+      "valor": 0
+    },
+    {
+      "nome": "Aprovado",
+      "valor": 1
+    },
+    {
+      "nome": "Rejeitado",
+      "valor": 2
+    },
+    {
+      "nome": "Cancelado",
+      "valor": 3
+    },
+    {
+      "nome": "Expirado",
+      "valor": 4
+    }
+  ]
+}

@@ -9,7 +9,7 @@
 
     <!-- NuGet package metadata (GitHub Packages) -->
     <PackageId>Fiap.TechChallenge.Contracts</PackageId>
-    <Version>1.1.0</Version>
+    <Version>2.0.0</Version>
     <Authors>SOAT-FIAP-2026</Authors>
     <Description>Contratos compartilhados (eventos SNS/SQS, comandos de compensação e DTOs HTTP) entre os-microservice, execution-service, billing-service, fase1-tech-challenge (Core) e lambda-auth-function.</Description>
     <PackageTags>fiap;techchallenge;contracts;sns;sqs;saga;events</PackageTags>

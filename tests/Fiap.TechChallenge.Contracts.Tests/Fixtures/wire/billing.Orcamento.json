@@ -1,0 +1,15 @@
+{
+  "fonte": "Billing.Service.Domain:Billing.Service.Domain.Entities.Orcamento",
+  "opcoes": "Http",
+  "forma": {
+    "apagadoEm": "string?",
+    "atualizadoEm": "string",
+    "criadoEm": "string",
+    "id": "string",
+    "idOrcamento": "string",
+    "idOrdemServico": "string",
+    "valorTotal": {
+      "valor": "number"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "fonte": "Billing.Service.Api:Billing.Service.Api.Middlewares.ExceptionHandlingMiddleware+ErrorResponse",
+  "opcoes": "Http",
+  "forma": {
+    "message": "string",
+    "statusCode": "number",
+    "traceId": "string"
+  }
+}

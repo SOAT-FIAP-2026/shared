@@ -1,0 +1,9 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.ClienteSnapshotResponse",
+  "opcoes": "Http",
+  "forma": {
+    "idCliente": "string",
+    "nome": "string",
+    "telefone": "string?"
+  }
+}

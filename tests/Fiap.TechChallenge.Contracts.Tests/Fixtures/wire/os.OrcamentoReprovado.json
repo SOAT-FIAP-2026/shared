@@ -1,0 +1,14 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.OrcamentoReprovado",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "ocorridoEm": "string",
+    "pecasInsumosIds": [
+      "string"
+    ],
+    "tipoEvento": "string"
+  }
+}

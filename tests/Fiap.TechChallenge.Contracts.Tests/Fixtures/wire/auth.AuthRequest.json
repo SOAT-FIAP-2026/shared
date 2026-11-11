@@ -1,0 +1,7 @@
+{
+  "fonte": "Fiap.TechChallenge.LambdaAuth:Fiap.TechChallenge.LambdaAuth.Models.AuthRequest",
+  "opcoes": "PadraoDotNet",
+  "forma": {
+    "Cpf": "string"
+  }
+}

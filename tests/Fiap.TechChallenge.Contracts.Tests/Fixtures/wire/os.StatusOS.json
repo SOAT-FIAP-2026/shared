@@ -1,0 +1,59 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Entities.StatusOS",
+  "valores": [
+    {
+      "nome": "Recebida",
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "codigo": "RECEBIDA",
+      "descricao": "Recebida"
+    },
+    {
+      "nome": "EmDiagnostico",
+      "id": "d3e4f5a6-b7c8-9012-defa-234567890123",
+      "codigo": "EM_DIAGNOSTICO",
+      "descricao": "Em Diagnóstico"
+    },
+    {
+      "nome": "AguardandoAprovacao",
+      "id": "e3f4a5b6-c7d8-9012-efab-345678901234",
+      "codigo": "AGUARDANDO_APROVACAO",
+      "descricao": "Aguardando aprovação"
+    },
+    {
+      "nome": "OrcamentoAprovado",
+      "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+      "codigo": "ORCAMENTO_APROVADO",
+      "descricao": "Orçamento Aprovado"
+    },
+    {
+      "nome": "OrcamentoReprovado",
+      "id": "b8c9d0e1-f2a3-4567-bcde-678901234567",
+      "codigo": "ORCAMENTO_REPROVADO",
+      "descricao": "Orçamento Reprovado"
+    },
+    {
+      "nome": "EmExecucao",
+      "id": "f4a5b6c7-d8e9-0123-efab-345678901234",
+      "codigo": "EM_EXECUCAO",
+      "descricao": "Em Execução"
+    },
+    {
+      "nome": "Finalizada",
+      "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+      "codigo": "FINALIZADA",
+      "descricao": "Finalizada"
+    },
+    {
+      "nome": "Entregue",
+      "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+      "codigo": "ENTREGUE",
+      "descricao": "Entregue"
+    },
+    {
+      "nome": "Cancelada",
+      "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+      "codigo": "CANCELADA",
+      "descricao": "Cancelada"
+    }
+  ]
+}

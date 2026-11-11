@@ -1,0 +1,8 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.ServicoSugeridoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "descricao": "string?",
+    "idServico": "string"
+  }
+}

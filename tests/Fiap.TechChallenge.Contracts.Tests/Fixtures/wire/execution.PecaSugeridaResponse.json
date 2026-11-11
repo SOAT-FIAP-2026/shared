@@ -1,0 +1,9 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.PecaSugeridaResponse",
+  "opcoes": "Http",
+  "forma": {
+    "descricao": "string?",
+    "idPeca": "string",
+    "quantidade": "number"
+  }
+}

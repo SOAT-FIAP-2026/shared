@@ -1,0 +1,11 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Requests.CadastrarRequest",
+  "opcoes": "Http",
+  "forma": {
+    "email": "string",
+    "idPermissao": "string",
+    "login": "string",
+    "nome": "string",
+    "senha": "string"
+  }
+}

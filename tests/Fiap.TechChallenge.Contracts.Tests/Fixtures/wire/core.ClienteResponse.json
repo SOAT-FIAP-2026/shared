@@ -1,0 +1,11 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Responses.ClienteResponse",
+  "opcoes": "Http",
+  "forma": {
+    "celular": "string",
+    "cpfCnpj": "string",
+    "email": "string",
+    "id": "string",
+    "nome": "string"
+  }
+}

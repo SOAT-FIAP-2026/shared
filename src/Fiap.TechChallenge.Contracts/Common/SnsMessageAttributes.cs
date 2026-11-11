@@ -18,6 +18,12 @@ public static class SnsMessageAttributes
     /// <summary>Header/atributo de correlação ponta a ponta.</summary>
     public const string CorrelationId = "X-Correlation-ID";
 
+    /// <summary>
+    /// Atributo SQS da fila de compensação do <c>os-microservice</c> (<c>SqsFilaCompensacao</c>) com o
+    /// <c>TipoCompensacaoContrato</c> como texto. Essa fila não usa <see cref="TipoEvento"/> nem <see cref="Origem"/>.
+    /// </summary>
+    public const string TipoCompensacao = "tipo";
+
     public static class Origens
     {
         public const string OsService = "techchallenge.ordem-servico";

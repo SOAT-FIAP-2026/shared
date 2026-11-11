@@ -1,0 +1,8 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Requests.LoginRequest",
+  "opcoes": "Http",
+  "forma": {
+    "login": "string",
+    "senha": "string"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.OrdemProducaoFilaItemResponse",
+  "opcoes": "Http",
+  "forma": {
+    "cliente": {
+      "idCliente": "string",
+      "nome": "string",
+      "telefone": "string?"
+    },
+    "dataAbertura": "string",
+    "dataLiberacao": "string?",
+    "filialId": "string?",
+    "id": "string",
+    "ordemServicoId": "string",
+    "status": "string",
+    "tarefasConcluidas": "number",
+    "tempoTotalEstimadoMinutos": "number",
+    "totalTarefas": "number",
+    "veiculo": {
+      "ano": "number",
+      "modelo": "string",
+      "placa": "string"
+    }
+  }
+}

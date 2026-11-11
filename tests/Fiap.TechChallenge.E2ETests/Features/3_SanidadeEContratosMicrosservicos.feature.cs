@@ -26,9 +26,9 @@ namespace Fiap.TechChallenge.E2ETests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Sanidade e Contratos dos Microsserviços", "  Como operador de infraestrutura\n  Quero verificar a saúde de todos os serviços " +
-                "e componentes de mensageria\n  Para assegurar a disponibilidade da arquitetura di" +
-                "stribuída", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Sanidade e Contratos dos Microsserviços", "  Como operador de infraestrutura\r\n  Quero verificar a saúde de todos os serviços" +
+                " e componentes de mensageria\r\n  Para assegurar a disponibilidade da arquitetura " +
+                "distribuída", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         

@@ -1,0 +1,15 @@
+{
+  "fonte": "OrdemServico.Lambda:OrdemServico.Lambda.Domain.Events.OrdemServicoCancelada",
+  "opcoes": "OsEventos",
+  "forma": {
+    "correlationId": "string?",
+    "idEvento": "string",
+    "idOrdemServico": "string",
+    "motivo": "string",
+    "ocorridoEm": "string",
+    "pecasInsumosIds": [
+      "string"
+    ],
+    "tipoEvento": "string"
+  }
+}

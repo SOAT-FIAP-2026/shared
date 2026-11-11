@@ -9,16 +9,16 @@ public class CoreContractsTests
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [Fact]
-    public void ClienteCatalogoDto_deve_suportar_telefone_opcional_e_roundtrip_json()
+    public void ClienteCatalogoDto_deve_fazer_roundtrip_json()
     {
         var id = Guid.NewGuid();
-        var dto = new ClienteCatalogoDto(id, "Carlos Souza", "carlos@email.com", "+5511988887777", "+551133334444");
+        var dto = new ClienteCatalogoDto(id, "Carlos Souza", "00000000000", "carlos@email.com", "+5511988887777");
 
         dto.Id.Should().Be(id);
         dto.Nome.Should().Be("Carlos Souza");
+        dto.CpfCnpj.Should().Be("00000000000");
         dto.Email.Should().Be("carlos@email.com");
         dto.Celular.Should().Be("+5511988887777");
-        dto.Telefone.Should().Be("+551133334444");
 
         var json = JsonSerializer.Serialize(dto, JsonOptions);
         var copy = JsonSerializer.Deserialize<ClienteCatalogoDto>(json, JsonOptions);
@@ -27,10 +27,10 @@ public class CoreContractsTests
     }
 
     [Fact]
-    public void ServicoCatalogoDto_deve_suportar_descricao_opcional_e_roundtrip_json()
+    public void ServicoCatalogoDto_deve_fazer_roundtrip_json()
     {
         var id = Guid.NewGuid();
-        var dto = new ServicoCatalogoDto(id, "Alinhamento 3D", 150.00m, 45, "Alinhamento computadorizado com tecnologia 3D");
+        var dto = new ServicoCatalogoDto(id, "Alinhamento 3D", "Alinhamento computadorizado com tecnologia 3D", 150.00m, 45);
 
         dto.Id.Should().Be(id);
         dto.Nome.Should().Be("Alinhamento 3D");
@@ -111,7 +111,7 @@ public class CoreContractsTests
         CoreApiRoutes.ListarPecasInsumos.Should().Be("api/v1/pecas-insumos");
         string.Format(CoreApiRoutes.RemoverQuantidadeEstoque, id).Should().Be($"api/v1/estoques/{id}/remover-quantidade");
         string.Format(CoreApiRoutes.AdicionarQuantidadeEstoque, id).Should().Be($"api/v1/estoques/{id}/adicionar-quantidade");
-        CoreApiRoutes.LoginStaff.Should().Be("api/v1/autenticacao/login");
-        CoreApiRoutes.CadastrarStaff.Should().Be("api/v1/autenticacao/cadastrar");
+        CoreApiRoutes.LoginStaff.Should().Be("api/v1/Autenticacao/Login");
+        CoreApiRoutes.CadastrarStaff.Should().Be("api/v1/Autenticacao/Cadastrar");
     }
 }

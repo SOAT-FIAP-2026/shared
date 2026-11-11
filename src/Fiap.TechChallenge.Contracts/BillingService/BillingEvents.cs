@@ -4,6 +4,7 @@ namespace Fiap.TechChallenge.Contracts.Events;
 /// Publicado pelo <c>billing-service</c> quando o orçamento e o QR Code/Link do Mercado Pago são gerados
 /// e enviados ao cliente.
 /// </summary>
+/// <remarks><see cref="LinkPagamento"/> aponta para <c>api/v1/pagamento/checkout/{id}</c>, rota que não existe no billing. <see cref="QrCodePix"/> é sempre nulo.</remarks>
 public sealed record OrcamentoGeradoEvent : IntegrationEvent
 {
     public required Guid OrcamentoId { get; init; }
@@ -38,6 +39,7 @@ public sealed record PagamentoCanceladoCompensacaoEvent : IntegrationEvent
 /// Evento compatível com o filtro <c>tipoEvento = PagamentoRecusado</c> já assinado pela
 /// <c>CompensacaoEventoFunction</c> do <c>os-microservice</c> no tópico SNS.
 /// </summary>
+/// <remarks>Não trafega hoje: o billing publica <see cref="PagamentoCanceladoCompensacaoEvent"/> para rejeitado, cancelado e expirado.</remarks>
 public sealed record PagamentoRecusadoEvent : IntegrationEvent
 {
     public required string Motivo { get; init; }
@@ -48,6 +50,7 @@ public sealed record PagamentoRecusadoEvent : IntegrationEvent
 /// a <see cref="ProducaoCanceladaEvent"/> (Compensação B).
 /// Consumido pelo <c>os-microservice</c> para concluir a auditoria de compensação da OS.
 /// </summary>
+/// <remarks>Publicado quando chega <c>ProducaoCanceladaEvent</c>. <see cref="PagamentoId"/> pode ser <see cref="Guid.Empty"/> sem pagamento; não há estorno real no Mercado Pago.</remarks>
 public sealed record PagamentoEstornadoEvent : IntegrationEvent
 {
     public required Guid PagamentoId { get; init; }

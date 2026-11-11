@@ -26,9 +26,9 @@ namespace Fiap.TechChallenge.E2ETests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Faturamento, Orçamento e Pagamento da Ordem de Serviço (Billing Service)", "  Como um cliente da oficina mecânica\n  Eu quero receber o orçamento calculado pe" +
-                "lo Billing Service e realizar o pagamento\n  Para que minha Ordem de Serviço tenh" +
-                "a o orçamento aprovado e seja liberada para execução", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Faturamento, Orçamento e Pagamento da Ordem de Serviço (Billing Service)", "  Como um cliente da oficina mecânica\r\n  Eu quero receber o orçamento calculado p" +
+                "elo Billing Service e realizar o pagamento\r\n  Para que minha Ordem de Serviço te" +
+                "nha o orçamento aprovado e seja liberada para execução", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         

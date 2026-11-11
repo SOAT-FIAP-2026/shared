@@ -27,5 +27,10 @@
     <ProjectReference Include="..\..\src\Fiap.TechChallenge.Contracts\Fiap.TechChallenge.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Formas no fio capturadas dos tipos reais dos serviços (ver README, "Como regenerar fixtures"). -->
+    <None Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
 

@@ -1,0 +1,14 @@
+{
+  "fonte": "Fiap.TechChallenge.Execution.Application:Fiap.TechChallenge.Execution.Application.DTOs.MetricaProdutividadeMecanicoResponse",
+  "opcoes": "Http",
+  "forma": {
+    "idMecanico": "string",
+    "indiceEficienciaPercentual": "number",
+    "mediaEstimadaMinutos": "number",
+    "mediaRealizadaMinutos": "number",
+    "nomeMecanico": "string",
+    "tarefasConcluidas": "number",
+    "tempoTotalEstimadoMinutos": "number",
+    "tempoTotalRealizadoMinutos": "number"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "fonte": "Fiap.TechChallenge.Application:Fiap.TechChallenge.Application.DTOs.Requests.VeiculoRequest",
+  "opcoes": "Http",
+  "forma": {
+    "ano": "number",
+    "marca": "string",
+    "modelo": "string",
+    "placa": "string"
+  }
+}

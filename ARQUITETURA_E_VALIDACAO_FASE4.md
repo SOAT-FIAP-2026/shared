@@ -1,3 +1,5 @@
+> ⚠️ Desatualizado em 2026-11-08: afirmações de "zero duplicação" e "100% conforme" não refletem o código. Ver [docs/superpowers/specs/2026-11-08-espelho-contratos-design.md](docs/superpowers/specs/2026-11-08-espelho-contratos-design.md) e a seção "Inventário de Contratos" do README.
+
 # 🗺️ Arquitetura Consolidada, Fluxo Completo, Contratos e Validação da Fase 4
 
 Documento oficial consolidado com as **decisões arquiteturais definidas**, auditoria técnica multi-agentes e a **validação minuciosa contra os requisitos obrigatórios da Fase 4 (`FASE_4.md`)**.
