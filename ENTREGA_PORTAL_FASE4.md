@@ -6,27 +6,23 @@
 > **Organização GitHub:** `SOAT-FIAP-2026`  
 > **Data de Consolidação:** Novembro de 2026
 
-> **Checklist pré-exportação (PDF):** Preencha os campos destacados com `[PREENCHER: ...]` nas **Seções 1 e 3** (dados dos participantes e link do vídeo de demonstração) antes de gerar o PDF final para upload no portal.
-
 ---
 
 ## 1. Identificação do Grupo e Participantes
 
 | Campo | Informação |
 |---|---|
-| **Grupo / Turma** | `[PREENCHER: Nome do Grupo / Turma SOAT]` |
 | **Disciplina / Fase** | Tech Challenge — Fase 4 (Arquitetura de Microsserviços, Saga Pattern, BDD & CI/CD) |
 | **Organização GitHub** | `https://github.com/SOAT-FIAP-2026` |
 
 ### Integrantes do Grupo
 
-| Nome Completo | E-mail Institucional | RM | Papel / Contribuição Principal |
-|---|---|---|---|
-| `[PREENCHER: Nome Completo]` | `[PREENCHER: e-mail@fiap.com.br]` | `[PREENCHER: RMXXXXX]` | `[PREENCHER: Ex.: Arquitetura / OS Microservice / Saga]` |
-| `[PREENCHER: Nome Completo]` | `[PREENCHER: e-mail@fiap.com.br]` | `[PREENCHER: RMXXXXX]` | `[PREENCHER: Ex.: Execution Service / Observabilidade]` |
-| `[PREENCHER: Nome Completo]` | `[PREENCHER: e-mail@fiap.com.br]` | `[PREENCHER: RMXXXXX]` | `[PREENCHER: Ex.: Billing Service / Mercado Pago]` |
-| `[PREENCHER: Nome Completo]` | `[PREENCHER: e-mail@fiap.com.br]` | `[PREENCHER: RMXXXXX]` | `[PREENCHER: Ex.: Core Service / Infra Terraform & EKS]` |
-| `[PREENCHER: Nome Completo]` | `[PREENCHER: e-mail@fiap.com.br]` | `[PREENCHER: RMXXXXX]` | `[PREENCHER: Ex.: Lambda Auth / Contratos / BDD E2E]` |
+| Nome Completo | RM |
+|---|---|
+| Gabriel Gregório Silveira Netto | rm370723 |
+| Diógenes
+| Luiz
+| Cristóvão
 
 ---
 
