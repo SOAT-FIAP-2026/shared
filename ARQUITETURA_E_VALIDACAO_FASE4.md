@@ -14,7 +14,7 @@ O ecossistema é composto por **8 repositórios** organizados em microsserviços
 1. **[`os-microservice`](../os-microservice/README.md)**: Microsserviço de **Ordem de Serviço** (.NET 8 AWS Lambda / Kestrel + **Amazon DynamoDB Single-Table** + Transactional Outbox via DynamoDB Streams + `ReservaEstoqueSaga` + workers de compensação SQS/SNS).
 2. **[`fase1-tech-challenge`](../fase1-tech-challenge/README.md)**: Microsserviço **Core / Catálogo / Clientes / Veículos / Estoque / Autenticação Staff** (.NET 8 + EKS + **PostgreSQL 16 RDS dedicado**).
 3. **[`execution-service`](../execution-service/README.md)**: Microsserviço de **Diagnóstico Técnico e Fila/Execução de Produção** (.NET 8 + EKS + **PostgreSQL 16 dedicado**).
-4. **[`billing-service`](../billing-service/README.md)**: Microsserviço de **Orçamento e Pagamento Mercado Pago** (.NET 8 + AWS Lambda / manifestos EKS + **PostgreSQL 16 dedicado**).
+4. **[`billing-service`](../billing-service/README.md)**: Microsserviço de **Orçamento (geração, envio e aprovação de orçamento) e Pagamento Mercado Pago** (.NET 8 + AWS Lambda / manifestos EKS + **PostgreSQL 16 dedicado**).
 5. **[`lambda-auth-function`](../lambda-auth-function/README.md)**: **Autenticação Serverless de Clientes por CPF** (API Gateway HTTP + AWS Lambda .NET 8). *Decisão arquitetural formal*: compõe o domínio de identidade e cadastro do Core Service como uma **Edge Facade Serverless**, preservando o isolamento entre microsserviços distintos. *(Nota: os defaults em código/Terraform dev ainda utilizam `fiap-tech-challenge`/`fiap-api`, sendo parametrizáveis via SSM em produção).*
 6. **Mensageria Unificada AWS (SNS + SQS + DLQs)**: Tópico SNS unificado (`techchallenge-eventos-<stage>`) com *fanout* por atributo `tipoEvento` para filas SQS dedicadas por serviço com DLQs (`techchallenge-execucao-eventos`, `techchallenge-billing-eventos`, `techchallenge-os-eventos`, `techchallenge-ordem-servico-compensacao`).
 7. **[`shared`](./README.md)**: Centraliza o pacote de contratos espelhados [`Fiap.TechChallenge.Contracts`](./src/Fiap.TechChallenge.Contracts/Fiap.TechChallenge.Contracts.csproj) (`v2.0.0`), testes de espelho de contrato (`Contracts.Tests`), execução local integrada ([`docker-compose.yml`](./docker-compose.yml) + Floci/Floci UI em [`01-init-aws.sh`](./floci/init/ready.d/01-init-aws.sh) + Stack Observabilidade), suíte BDD ponta a ponta ([`Fiap.TechChallenge.E2ETests`](./tests/Fiap.TechChallenge.E2ETests/)) e o documento de entrega [`ENTREGA_PORTAL_FASE4.md`](./ENTREGA_PORTAL_FASE4.md).
@@ -58,7 +58,7 @@ flowchart TB
     end
 
     subgraph Bill_Service["billing-service (Orcamento & Pagamento)"]
-        BILL_API["Orcamento & PagamentoController<br/>/api/v1/orcamento | /api/v1/pagamento"]
+        BILL_API["Orcamento & PagamentoController<br/>/api/v1/orcamento (gerar/aprovar) | /api/v1/pagamento"]
         BILL_BG["BillingSqsBackgroundWorker<br/>(Worker SQS Fila Billing)"]
         DB_BILL[("PostgreSQL 16 Dedicado<br/>techchallenge_billing_db (SQL)")]
     end
@@ -159,7 +159,7 @@ sequenceDiagram
     end
 
     rect rgb(255, 250, 235)
-        Note over MEC,BILL: Etapa 2 — Diagnostico Tecnico e Saga Orquestrada de Estoque
+        Note over MEC,BILL: Etapa 2 — Diagnostico Tecnico e Geracao de Orcamento (Billing)
         MEC->>EXEC: PATCH /api/v1/producao/{id}/diagnostico/iniciar
         EXEC->>SNS: Publica DiagnosticoIniciadoEvent
         SNS->>OS: OsSqsBackgroundWorker atualiza OS para EM_DIAGNOSTICO
@@ -167,26 +167,29 @@ sequenceDiagram
         EXEC->>SNS: Publica DiagnosticoTecnicoConcluidoEvent
         SNS->>OS: Atualiza OS para AGUARDANDO_APROVACAO
         SNS->>BILL: BillingSqsBackgroundWorker cria Orcamento e publica OrcamentoGeradoEvent
-
-        MEC->>OS: POST /api/v1/ordens-servico/{id}/pecas-insumos
-        OS->>CORE: ReservaEstoqueSaga chama PUT /api/v1/estoques/{peca}/remover-quantidade
-        alt Falha na Reserva de Estoque (Compensacao via SQS)
-            OS->>OS: Atualiza SAGA# = Compensando e enfileira ComandoCompensacao
-            OS-->>MEC: 400 Bad Request (ex. Estoque insuficiente)
-            OS->>CORE: CompensacaoFilaFunction chama PUT /estoques/{peca}/adicionar-quantidade
-        else Reserva Concluida com Sucesso
-            OS->>OS: TransactWriteItems (OS# + OUTBOX PecasInsumoIncluidas)
-            OS-->>MEC: 200 OK (OrdemServicoResponse)
-        end
+        ATD->>BILL: POST /api/v1/orcamento?idOrdemServico={id} (gerar orcamento)
+        BILL->>SNS: Publica OrcamentoGeradoEvent (atualiza valorOrcamento na OS)
     end
 
     rect rgb(248, 240, 255)
-        Note over CLI,MP: Etapa 3 — Pagamento Mercado Pago e Liberacao / Compensacao
+        Note over CLI,CORE: Etapa 3 — Aprovacao de Orcamento, Pagamento e Baixa no Estoque
+        CLI->>BILL: GET /api/v1/orcamento/{id}/decisao?aprovado=true (aprovar orcamento)
+        BILL->>OS: PATCH /api/v1/ordens-servico/{id}/aprovar-orcamento?aprovado=true
         CLI->>BILL: POST /api/v1/pagamento/boleto
         MP->>BILL: POST /api/v1/pagamento/webhook (HMAC-SHA256 x-signature)
-        alt Pagamento Aprovado
+        alt Pagamento Aprovado / Orcamento Aprovado
             BILL->>SNS: Publica PagamentoConfirmadoEvent
             SNS->>OS: Atualiza OS para ORCAMENTO_APROVADO
+            MEC->>OS: POST /api/v1/ordens-servico/{id}/pecas-insumos
+            OS->>CORE: ReservaEstoqueSaga chama PUT /api/v1/estoques/{peca}/remover-quantidade
+            alt Falha na Reserva de Estoque (Compensacao via SQS)
+                OS->>OS: Atualiza SAGA# = Compensando e enfileira ComandoCompensacao
+                OS-->>MEC: 400 Bad Request (ex. Estoque insuficiente)
+                OS->>CORE: CompensacaoFilaFunction chama PUT /estoques/{peca}/adicionar-quantidade
+            else Reserva Concluida com Sucesso
+                OS->>OS: TransactWriteItems (OS# + OUTBOX PecasInsumoIncluidas)
+                OS-->>MEC: 200 OK (OrdemServicoResponse)
+            end
             OS->>SNS: Publica OrdemServicoLiberadaParaExecucaoEvent
             SNS->>EXEC: OrdemProducao entra na fila (NA_FILA)
         else Pagamento Rejeitado / Cancelado / Expirado
@@ -267,7 +270,7 @@ O pacote [`Fiap.TechChallenge.Contracts`](./src/Fiap.TechChallenge.Contracts/Fia
 
 ### 5.4 [`billing-service`](../billing-service/README.md)
 * **Banco de Dados (SQL):** PostgreSQL 16 dedicado (`techchallenge_billing_db`).
-* **Integração Mercado Pago & Mensageria:** `MercadoPagoClient.cs`, geração de boleto/Pix (`POST /api/v1/pagamento/boleto`), webhook HMAC-SHA256 (`POST /api/v1/pagamento/webhook`), `BillingSqsBackgroundWorker` e `BillingSnsEventPublisher`.
+* **Orçamento, Integração Mercado Pago & Mensageria:** Geração, envio e aprovação/decisão de orçamentos (`POST /api/v1/orcamento`, `POST /api/v1/orcamento/{id}/enviar-orcamento`, `GET /api/v1/orcamento/{id}/decisao`), `MercadoPagoClient.cs`, geração de boleto/Pix (`POST /api/v1/pagamento/boleto`), webhook HMAC-SHA256 (`POST /api/v1/pagamento/webhook`), `BillingSqsBackgroundWorker` e `BillingSnsEventPublisher`.
 * **CI/CD & Infra:** Manifestos K8s em `k8s/base/`, `k8s/overlays/{aws,local}` e `k8s/observability/`; workflows `.github/workflows/sonar.yml` e `deploy-aws-s3.yml` (deploy em AWS Lambda `fiap-billing-service-api` via S3). *(Nota: não possui workflow `ci.yml` separado de PR além do `sonar.yml`, nem step automatizado de rollout K8s).*
 * **Testes e Cobertura:**
   - Execução observada em 2026-11-14 (`--configuration Release --no-build`, com coleta Coverlet): **214 aprovados, 1 falha, 0 ignorados (215 total)** — falha conhecida em `BillingServiceContractTests.Enums_de_billing_devem_manter_os_valores_do_contrato`, que ainda espera `"Recusado"` e `"Estornado"` enquanto o `shared` 2.0.0 espelha `"Rejeitado"` e `"Cancelado"` da entidade de domínio `PagamentoStatus` (conforme documentado em `PENDENCIAS_CONTRATOS.md`).

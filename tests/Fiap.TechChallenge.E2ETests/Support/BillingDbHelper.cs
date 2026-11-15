@@ -66,6 +66,23 @@ namespace Fiap.TechChallenge.E2ETests.Support
             _connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Remove constraints legadas de chave estrangeira para ordem_servico caso o volume local do PostgreSQL
+        /// tenha sido inicializado antes do desacoplamento completo do banco de dados do billing-service.
+        /// </summary>
+        public async Task GarantirSchemaIsoladoAsync()
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            const string sql = @"
+                ALTER TABLE orcamento
+                DROP CONSTRAINT IF EXISTS ""FK_orcamento_ordem_servico_id_ordem_servico"";";
+
+            await using var cmd = new NpgsqlCommand(sql, conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
         #region Consultas de Orçamento
 
         /// <summary>

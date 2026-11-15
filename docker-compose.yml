@@ -215,6 +215,8 @@ services:
       AWS_SECRET_ACCESS_KEY: "test"
       EVENTOS_TOPIC_ARN: "arn:aws:sns:sa-east-1:000000000000:techchallenge-eventos-local"
       BILLING_QUEUE_URL: "http://floci:4566/000000000000/techchallenge-billing-eventos-local"
+      ORDEM_SERVICO_API_BASE_URL: "http://os-service:8080"
+      OrdemServico__BaseUrl: "http://os-service:8080"
       MercadoPago__AccessToken: "mock"
       JWT_SECRET: "techchallenge_jwt_secret_super_secure_key_1234567890!"
       Jwt__Secret: "techchallenge_jwt_secret_super_secure_key_1234567890!"

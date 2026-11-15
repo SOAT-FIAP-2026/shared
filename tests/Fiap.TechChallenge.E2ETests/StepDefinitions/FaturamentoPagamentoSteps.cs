@@ -57,6 +57,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         [Given(@"que existe uma Ordem de Serviço em fase de diagnóstico concluído com serviços e peças")]
         public async Task DadoQueExisteUmaOrdemDeServicoEmFaseDeDiagnosticoConcluidoComServicosEPecas()
         {
+            await _billingDb.GarantirSchemaIsoladoAsync();
             SetAuthHeader(_http);
 
             // 1. Abre nova Ordem de Serviço no OS Service
@@ -129,6 +130,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         [When(@"o orçamento é solicitado no Billing Service utilizando o contrato compartilhado GerarOrcamentoRequest")]
         public async Task QuandoOOrcamentoESolicitadoNoBillingServiceUtilizandoOContratoCompartilhadoGerarOrcamentoRequest()
         {
+            await _billingDb.GarantirSchemaIsoladoAsync();
             SetAuthHeader(_http);
 
             var request = new GerarOrcamentoRequest(

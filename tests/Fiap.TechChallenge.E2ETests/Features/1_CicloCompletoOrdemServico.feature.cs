@@ -26,10 +26,9 @@ namespace Fiap.TechChallenge.E2ETests.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Ciclo de Vida Completo da Ordem de Serviço", "  Como um atendente e mecânico da oficina mecânica\r\n  Quero abrir, diagnosticar, " +
-                "orçar, executar tarefas e entregar uma Ordem de Serviço\r\n  Para validar a integr" +
-                "ação ponta a ponta e a persistência em múltiplos bancos de dados (DynamoDB e Pos" +
-                "tgreSQL)", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new System.Globalization.CultureInfo("pt-BR"), "Features", "Ciclo de Vida Completo da Ordem de Serviço", @"  Como um atendente e mecânico da oficina mecânica
+  Quero abrir, diagnosticar, gerar e aprovar orçamento, baixar estoque, executar tarefas e entregar uma Ordem de Serviço
+  Para validar a integração ponta a ponta e a persistência em múltiplos bancos de dados (DynamoDB e PostgreSQL)", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
@@ -95,14 +94,17 @@ namespace Fiap.TechChallenge.E2ETests.Features
             await this.TestTearDownAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Abertura, Diagnóstico Técnico, Orçamento, Execução e Entrega da Ordem de Serviço")]
+        [Xunit.SkippableFactAttribute(DisplayName="Abertura, Diagnóstico Técnico, Orçamento, Aprovação, Baixa de Estoque, Execução e" +
+            " Entrega da Ordem de Serviço")]
         [Xunit.TraitAttribute("FeatureTitle", "Ciclo de Vida Completo da Ordem de Serviço")]
-        [Xunit.TraitAttribute("Description", "Abertura, Diagnóstico Técnico, Orçamento, Execução e Entrega da Ordem de Serviço")]
-        public async System.Threading.Tasks.Task AberturaDiagnosticoTecnicoOrcamentoExecucaoEEntregaDaOrdemDeServico()
+        [Xunit.TraitAttribute("Description", "Abertura, Diagnóstico Técnico, Orçamento, Aprovação, Baixa de Estoque, Execução e" +
+            " Entrega da Ordem de Serviço")]
+        public async System.Threading.Tasks.Task AberturaDiagnosticoTecnicoOrcamentoAprovacaoBaixaDeEstoqueExecucaoEEntregaDaOrdemDeServico()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abertura, Diagnóstico Técnico, Orçamento, Execução e Entrega da Ordem de Serviço", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abertura, Diagnóstico Técnico, Orçamento, Aprovação, Baixa de Estoque, Execução e" +
+                    " Entrega da Ordem de Serviço", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 7
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -114,7 +116,7 @@ namespace Fiap.TechChallenge.E2ETests.Features
             {
                 await this.ScenarioStartAsync();
 #line 8
-    await testRunner.GivenAsync("que os microsserviços Core, OS e Execução estão operacionais", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
+    await testRunner.GivenAsync("que os microsserviços Core, OS, Execução e Billing estão operacionais", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
 #line hidden
 #line 9
     await testRunner.AndAsync("que o usuário autentica como Administrador no Core Service", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
@@ -153,31 +155,40 @@ namespace Fiap.TechChallenge.E2ETests.Features
                         "IDO\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
 #line hidden
 #line 20
-    await testRunner.WhenAsync("o mecânico inclui itens de serviço e peças na Ordem de Serviço", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+    await testRunner.WhenAsync("é gerado o orçamento no Billing Service após o diagnóstico concluído", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
 #line 21
-    await testRunner.AndAsync("o cliente aprova o orçamento", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
+    await testRunner.ThenAsync("o orçamento é gravado no PostgreSQL do Billing Service e a OS aguarda aprovação", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
 #line hidden
 #line 22
-    await testRunner.ThenAsync("a Ordem de Serviço é atualizada no DynamoDB com orçamento aprovado", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+    await testRunner.WhenAsync("o cliente aprova o orçamento", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
 #line 23
+    await testRunner.ThenAsync("a Ordem de Serviço é atualizada no DynamoDB com orçamento aprovado", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 24
+    await testRunner.WhenAsync("é realizada a baixa no estoque das peças no Core Service para a Ordem de Serviço", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
+#line hidden
+#line 25
+    await testRunner.ThenAsync("o saldo de estoque da peça é reduzido no Core Service", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
+#line hidden
+#line 26
     await testRunner.AndAsync("o Execution Service recebe a liberação e grava as tarefas no PostgreSQL com statu" +
                         "s \"NA_FILA\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
 #line hidden
-#line 24
+#line 27
     await testRunner.WhenAsync("o mecânico inicia e finaliza as tarefas de execução no Execution Service", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
-#line 25
+#line 28
     await testRunner.ThenAsync("a Ordem de Produção é concluída no PostgreSQL do Execution Service", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
 #line hidden
-#line 26
+#line 29
     await testRunner.AndAsync("a Ordem de Serviço no OS Service atinge o status \"Finalizada\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "E ");
 #line hidden
-#line 27
+#line 30
     await testRunner.WhenAsync("o cliente confirma a entrega do veículo", ((string)(null)), ((global::Reqnroll.Table)(null)), "Quando ");
 #line hidden
-#line 28
+#line 31
     await testRunner.ThenAsync("a Ordem de Serviço atinge o status final \"Entregue\" no DynamoDB", ((string)(null)), ((global::Reqnroll.Table)(null)), "Então ");
 #line hidden
             }

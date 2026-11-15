@@ -20,9 +20,9 @@
 | Nome Completo | RM |
 |---|---|
 | Gabriel Gregório Silveira Netto | rm370723 |
-| Diógenes
-| Luiz
-| Cristóvão
+| Diógenes | rm370708
+| Luiz |
+| Cristovão | rm370639
 
 ---
 
@@ -34,7 +34,7 @@ O ecossistema é composto por **8 repositórios independentes** na organização
 |---|---|---|---|---|---|
 | 1 | **`os-microservice`** | `https://github.com/SOAT-FIAP-2026/os-microservice` | **Ordem de Serviço** (abertura, ciclo de vida, orquestração da Saga de estoque, Transactional Outbox e compensações) | .NET 8 (AWS Lambda / Kestrel) + **Amazon DynamoDB** (NoSQL Single-Table) | GitHub Actions (`ci.yml`, `cd.yml` GHCR, `sonar.yml`) + SAM (`infra/template.yaml`) + K8s (`k8s/base/`) |
 | 2 | **`execution-service`** | `https://github.com/SOAT-FIAP-2026/execution-service` | **Execução e Produção** (diagnóstico técnico, fila FIFO de produção, apontamento de tarefas e métricas de oficina) | .NET 8 (ASP.NET Core) + **PostgreSQL 16** dedicado (`techchallenge_execution_db`) | GitHub Actions (`ci.yml`, `cd.yml` GHCR, `sonar.yml`) + K8s (`k8s/base/`) |
-| 3 | **`billing-service`** | `https://github.com/SOAT-FIAP-2026/billing-service` | **Orçamento e Pagamento** (cálculo/envio de orçamento, cobrança Pix/Boleto e webhook HMAC-SHA256 Mercado Pago) | .NET 8 (ASP.NET Core / Lambda) + **PostgreSQL 16** dedicado (`techchallenge_billing_db`) | GitHub Actions (`sonar.yml`, `deploy-aws-s3.yml` Lambda) + K8s (`k8s/base/`, `overlays/`, `observability/`) |
+| 3 | **`billing-service`** | `https://github.com/SOAT-FIAP-2026/billing-service` | **Orçamento e Pagamento** (geração, envio e aprovação de orçamento, cobrança Pix/Boleto e webhook HMAC-SHA256 Mercado Pago) | .NET 8 (ASP.NET Core / Lambda) + **PostgreSQL 16** dedicado (`techchallenge_billing_db`) | GitHub Actions (`sonar.yml`, `deploy-aws-s3.yml` Lambda) + K8s (`k8s/base/`, `overlays/`, `observability/`) |
 | 4 | **`fase1-tech-challenge`** | `https://github.com/SOAT-FIAP-2026/fase1-tech-challenge` | **Core / Catálogo / Estoque** (clientes, veículos, catálogo de serviços/peças, saldo de estoque e autenticação Staff) | .NET 8 (Clean Arch / DDD) + **PostgreSQL 16** RDS dedicado (`techchallenge_core_db`) | GitHub Actions (`ci.yml`, `cd.yaml` Docker Hub + EKS rollout, `sonar.yaml`) + K8s (`k8s/base/`, `overlays/`) |
 | 5 | **`lambda-auth-function`** | `https://github.com/SOAT-FIAP-2026/lambda-auth-function` | **Edge Facade Serverless de Identidade** (autenticação de clientes por CPF `POST /auth/token` e emissão de JWT) | .NET 8 (AWS Lambda + Dapper/Npgsql) sobre domínio Core | GitHub Actions (`build.yml` + SonarCloud, `cd.yml` Lambda + Terraform) + Terraform (`infra/`) |
 | 6 | **`shared`** | `https://github.com/SOAT-FIAP-2026/shared` | **Contratos, Correlação, Ambiente Local & BDD E2E** (`Fiap.TechChallenge.Contracts`, `Contracts.Tests`, 4 features Reqnroll, Docker Compose + Floci) | .NET 8 Classlib + xUnit + Reqnroll 2.2 + Floci + Stack Observabilidade | GitHub Actions (`ci-publish.yml`, `e2e.yml` manual) + Docker Compose unificado |
@@ -66,7 +66,7 @@ O ecossistema é composto por **8 repositórios independentes** na organização
 | Bloco | Janela de Tempo | Requisito Demonstrado (`FASE_4.md`) | Evidências Apresentadas no Vídeo |
 |---|---|---|---|
 | **1. Visão Geral & Repositórios** | `00:00 – 02:00` | Arquitetura distribuída e separação de repositórios | Exibição dos repositórios independentes, bancos isolados (DynamoDB Single-Table no `os-microservice` e 3 bancos PostgreSQL dedicados em Core, Execution e Billing) e topologia SNS/SQS (Floci UI / AWS Console). |
-| **2. Fluxo Completo da OS (Happy Path)** | `02:00 – 06:30` | Fluxo completo de uma OS passando pelos microsserviços | 1. Login Cliente (`POST /auth/token`) e Staff (`POST /api/v1/autenticacao/Login`).<br/>2. Abertura da OS no `os-microservice` (`POST /api/v1/ordens-servico`), gravação atômica OS + Outbox no DynamoDB e consumo no `execution-service`.<br/>3. Diagnóstico no `execution-service` (`PATCH .../diagnostico/iniciar` e `POST .../diagnostico/finalizar`), inclusão de peças/serviços com baixa de estoque no Core.<br/>4. Geração de orçamento e cobrança no `billing-service` (`POST /api/v1/pagamento/boleto`) + simulação de webhook aprovado (`POST /api/v1/pagamento/webhook`).<br/>5. Liberação automática para `NA_FILA`, execução de tarefas no `execution-service` e confirmação de entrega no `os-microservice`. |
+| **2. Fluxo Completo da OS (Happy Path)** | `02:00 – 06:30` | Fluxo completo de uma OS passando pelos microsserviços | 1. Login Cliente (`POST /auth/token`) e Staff (`POST /api/v1/autenticacao/Login`).<br/>2. Abertura da OS no `os-microservice` (`POST /api/v1/ordens-servico`), gravação atômica OS + Outbox no DynamoDB e consumo no `execution-service` (`AGUARDANDO_DIAGNOSTICO`).<br/>3. Diagnóstico técnico no `execution-service` (`PATCH .../diagnostico/iniciar` e `POST .../diagnostico/finalizar`).<br/>4. Geração de orçamento no `billing-service` (`POST /api/v1/orcamento` / evento `DiagnosticoTecnicoConcluidoEvent`), aprovação do orçamento pelo cliente (`GET /api/v1/orcamento/{id}/decisao?aprovado=true` / `PATCH .../aprovar-orcamento`) e cobrança/webhook (`POST /api/v1/pagamento/boleto` e `POST /api/v1/pagamento/webhook`).<br/>5. Baixa no estoque das peças no Core Service via `ReservaEstoqueSaga` (`POST /api/v1/ordens-servico/{id}/pecas-insumos`), liberação automática para `NA_FILA`, execução do serviço no `execution-service` e confirmação de entrega no `os-microservice`. |
 | **3. Saga Pattern & Rollbacks** | `06:30 – 09:30` | Execução do Saga Pattern e tratamento de falhas | 1. **Cenário A (Falha Síncrona de Estoque):** Inclusão de peça sem saldo suficiente na `ReservaEstoqueSaga`, retorno HTTP 400 imediato e estorno assíncrono das peças já baixadas via SQS `CompensacaoFilaFunction`.<br/>2. **Cenário B (Compensação Assíncrona por Pagamento/Produção):** Recusa de pagamento no webhook do `billing-service` emitindo `PagamentoCanceladoCompensacaoEvent` no SNS, consumo idempotente no `os-microservice`, cancelamento da OS no DynamoDB, estorno de estoque no Core e cancelamento da `OrdemProducao` no Execution. |
 | **4. CI/CD Automatizado & K8s** | `09:30 – 12:30` | Deploy automatizado de pelo menos um microsserviço com validação de testes | Execução/inspeção de pipeline GitHub Actions (`ci.yml`, `cd.yaml`/`cd.yml`, `sonar.yml`), validação dos testes unitários e de contratos/BDD, Quality Gate no SonarCloud e rollout automatizado em Kubernetes / EKS (`kubectl get pods -n techchallenge`, `kubectl rollout status`). |
 | **5. Observabilidade & Rastreamento** | `12:30 – 15:00` | Monitoramento e rastreamento dos fluxos distribuídos | Rastreamento ponta a ponta usando `X-Correlation-ID` propagado entre HTTP, DynamoDB Outbox, SNS e SQS: consulta de logs JSON estruturados no **Grafana Loki** (`correlation_id`, `os_id`), distributed traces no **Grafana Tempo** (via OpenTelemetry Collector) e dashboards de métricas **Prometheus** (`/metrics` + Blackbox Exporter). |
@@ -112,7 +112,7 @@ flowchart TB
     end
 
     subgraph Bill_Service["billing-service (Orcamento e Pagamento)"]
-        BILL_API["Orcamento & PagamentoController<br/>/api/v1/orcamento | /api/v1/pagamento"]
+        BILL_API["Orcamento & PagamentoController<br/>/api/v1/orcamento (gerar/aprovar) | /api/v1/pagamento"]
         BILL_BG["BillingSqsBackgroundWorker<br/>(Worker SQS Billing)"]
         DB_BILL[("PostgreSQL 16 Dedicado<br/>techchallenge_billing_db (SQL)")]
     end
@@ -201,7 +201,7 @@ flowchart TB
 | **`fase1-tech-challenge` (Core)** | `techchallenge_core_db` | PostgreSQL 16 (RDS) | Expõe CRUD de Clientes, Veículos, Serviços, Peças, Estoque (`/api/v1/estoques/*`) e Auth Staff (`/api/v1/Autenticacao/Login`). | — *(Consome demandas síncronas de catálogo e baixa/estorno de estoque do `os-microservice`).* |
 | **`os-microservice` (OS)** | `techchallenge-ordem-servico-<stage>` | Amazon DynamoDB (NoSQL Single-Table) | Expõe `/api/v1/ordens-servico/*`; consulta Core (`CoreApiClient`) e executa baixa de estoque na inclusão de peças. | **Outbox (`DynamoDB Streams -> OutboxPublisherFunction`)** + publicação SNS; consome eventos via `OsSqsBackgroundWorker` / `CompensacaoEventoFunction` e compensações via `CompensacaoFilaFunction` (SQS). |
 | **`execution-service` (Execução)** | `techchallenge_execution_db` | PostgreSQL 16 | Expõe `/api/v1/producao/*` (diagnóstico, fila FIFO, início/fim de tarefas, cancelamento e produtividade). | Publica `DiagnosticoIniciadoEvent`, `DiagnosticoTecnicoConcluidoEvent`, `ProducaoIniciadaEvent`, `ProducaoFinalizadaEvent`, `ProducaoCanceladaEvent` no SNS; consome fila SQS `techchallenge-execucao-eventos`. |
-| **`billing-service` (Billing)** | `techchallenge_billing_db` | PostgreSQL 16 | Expõe `/api/v1/orcamento/*`, `/api/v1/pagamento/boleto`, `/api/v1/pagamento/{id}` e `/api/v1/pagamento/webhook` (Mercado Pago). | Publica `OrcamentoGeradoEvent`, `PagamentoConfirmadoEvent`, `PagamentoCanceladoCompensacaoEvent`, `PagamentoEstornadoEvent` no SNS; consome fila SQS `techchallenge-billing-eventos`. |
+| **`billing-service` (Billing)** | `techchallenge_billing_db` | PostgreSQL 16 | Expõe `/api/v1/orcamento/*` (geração, envio e aprovação/decisão de orçamento), `/api/v1/pagamento/boleto`, `/api/v1/pagamento/{id}` e `/api/v1/pagamento/webhook` (Mercado Pago). | Publica `OrcamentoGeradoEvent`, `PagamentoConfirmadoEvent`, `PagamentoCanceladoCompensacaoEvent`, `PagamentoEstornadoEvent` no SNS; consome fila SQS `techchallenge-billing-eventos`. |
 
 ---
 
@@ -276,7 +276,7 @@ sequenceDiagram
     end
 
     rect rgb(255, 250, 235)
-        Note over STAFF,BILL: Diagnostico, Saga de Estoque e Orcamento
+        Note over STAFF,BILL: Diagnostico Tecnico e Geracao de Orcamento (Billing)
         STAFF->>EXEC: PATCH /api/v1/producao/{id}/diagnostico/iniciar
         EXEC->>SNS: Publica DiagnosticoIniciadoEvent
         SNS->>OS: Atualiza OS para EM_DIAGNOSTICO
@@ -284,18 +284,22 @@ sequenceDiagram
         EXEC->>SNS: Publica DiagnosticoTecnicoConcluidoEvent
         SNS->>OS: Atualiza OS para AGUARDANDO_APROVACAO
         SNS->>BILL: Gera Orcamento (PostgreSQL) e publica OrcamentoGeradoEvent
-        STAFF->>OS: POST /api/v1/ordens-servico/{id}/pecas-insumos
-        OS->>CORE: ReservaEstoqueSaga chama PUT /estoques/{peca}/remover-quantidade
-        OS->>OS: TransactWriteItems (OS# + OUTBOX PecasInsumoIncluidas)
+        STAFF->>BILL: POST /api/v1/orcamento?idOrdemServico={id} (gerar orcamento)
+        BILL->>SNS: Publica OrcamentoGeradoEvent (atualiza valorOrcamento na OS)
     end
 
     rect rgb(248, 240, 255)
-        Note over CLI,MP: Pagamento Mercado Pago e Liberacao
+        Note over CLI,CORE: Aprovacao de Orcamento, Pagamento e Baixa no Estoque
+        CLI->>BILL: GET /api/v1/orcamento/{id}/decisao?aprovado=true (aprovar orcamento)
+        BILL->>OS: PATCH /api/v1/ordens-servico/{id}/aprovar-orcamento?aprovado=true
         CLI->>BILL: POST /api/v1/pagamento/boleto
         BILL->>MP: Cria cobranca (bolbradesco)
         MP->>BILL: POST /api/v1/pagamento/webhook (HMAC-SHA256)
         BILL->>SNS: Publica PagamentoConfirmadoEvent
         SNS->>OS: Atualiza OS para ORCAMENTO_APROVADO
+        STAFF->>OS: POST /api/v1/ordens-servico/{id}/pecas-insumos
+        OS->>CORE: ReservaEstoqueSaga chama PUT /estoques/{peca}/remover-quantidade
+        OS->>OS: TransactWriteItems (OS# + OUTBOX PecasInsumoIncluidas)
         OS->>SNS: Publica OrdemServicoLiberadaParaExecucaoEvent
         SNS->>EXEC: Atualiza OrdemProducao para NA_FILA
     end
@@ -396,7 +400,7 @@ A decomposição do monólito inicial seguiu os limites semânticos de negócio 
 1. **`fase1-tech-challenge` (Core / Catálogo / Estoque) + `lambda-auth-function` (Edge Facade):** Concentra os dados mestres de baixa volatilidade relativa (Clientes, Veículos, Catálogo de Serviços e Peças/Insumos), o controle transacional de saldo de Estoque e a autenticação Staff/Cliente. A extração da autenticação de clientes por CPF para a `lambda-auth-function` isola picos de login na borda (Serverless/API Gateway) sem sobrecarregar o cluster EKS.
 2. **`os-microservice` (Ordem de Serviço):** Gerencia o agregado central de negócio (`OrdemServico`), a máquina de estados da OS, a consolidação de itens/orçamento e a coordenação transacional da reserva de peças (`ReservaEstoqueSaga`) e compensações. Por concentrar maior volume de consultas de status/progresso e transições de estado, opera de forma independente em **Amazon DynamoDB** e suporta execução tanto serverless (AWS Lambda + API Gateway) quanto em container K8s.
 3. **`execution-service` (Diagnóstico e Produção):** Isola o domínio operacional do chão de oficina: diagnóstico técnico pelo mecânico, fila ordenada (FIFO) de execução de ordens liberadas, apontamento granular de início/fim de tarefas e cálculo de métricas de produtividade — permitindo que a equipe de oficina opere mesmo sob picos no portal de faturamento.
-4. **`billing-service` (Orçamento e Pagamento):** Isola regras financeiras, cálculo/envio de orçamentos, geração de cobranças e validação criptográfica de webhooks externos (Mercado Pago `x-signature` HMAC-SHA256). Esse isolamento garante segurança reforçada, auditoria financeira dedicada e independência de deploy quando regras de meios de pagamento evoluem.
+4. **`billing-service` (Orçamento e Pagamento):** Isola regras financeiras, cálculo/geração, envio e aprovação de orçamentos (`POST /api/v1/orcamento`, `GET /api/v1/orcamento/{id}/decisao`), geração de cobranças e validação criptográfica de webhooks externos (Mercado Pago `x-signature` HMAC-SHA256). Esse isolamento garante segurança reforçada, auditoria financeira dedicada e independência de deploy quando regras de meios de pagamento evoluem.
 5. **`shared` (`Fiap.TechChallenge.Contracts` + BDD E2E):** Centraliza contratos de eventos/DTOs HTTP, helpers de correlação (`CorrelationContext`, `SnsCorrelationHelper`), testes de espelho de contrato (`Contracts.Tests`), infraestrutura local integrada (`docker-compose.yml` + Floci) e testes BDD ponta a ponta (`Fiap.TechChallenge.E2ETests`).
 
 ### 6.2 Justificativa da Persistência Poliglota (DynamoDB NoSQL vs PostgreSQL 16 SQL)

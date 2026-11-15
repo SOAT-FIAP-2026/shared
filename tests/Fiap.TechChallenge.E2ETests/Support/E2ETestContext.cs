@@ -1,3 +1,7 @@
+using Xunit;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace Fiap.TechChallenge.E2ETests.Support
 {
     public class E2ETestContext

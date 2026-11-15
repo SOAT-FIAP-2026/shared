@@ -129,6 +129,7 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
         [Given(@"que o atendente possui uma Ordem de Serviço aguardando pagamento com peças reservadas no estoque")]
         public async Task DadoQueOAtendentePossuiUmaOrdemDeServicoAguardandoPagamentoComPecasReservadasNoEstoque()
         {
+            await _billingDb.GarantirSchemaIsoladoAsync();
             await GarantirAutenticacaoECatalogoAsync();
 
             // 1. Consulta estoque inicial da peça no Core Service

@@ -5,7 +5,7 @@ Repositório compartilhado entre os microsserviços do **Tech Challenge (Fase 4 
 1. **[`os-microservice`](../os-microservice)**: Microsserviço de **Ordem de Serviço** (AWS Lambda .NET 8 + **DynamoDB NoSQL** + Outbox + Saga de Reserva de Estoque e Compensação).
 2. **[`fase1-tech-challenge`](../fase1-tech-challenge)**: Serviço **Core / Catálogo / Clientes / Veículos / Estoque / Staff Auth** (EKS + **PostgreSQL 16 RDS**).
 3. **[`execution-service`](../execution-service)**: Microsserviço de **Diagnóstico Técnico e Execução/Produção** de chão de oficina (EKS + **PostgreSQL 16 dedicado**).
-4. **[`billing-service`](../billing-service)**: Microsserviço de **Orçamento e Pagamento** integrado ao **Mercado Pago** (EKS + **PostgreSQL 16 dedicado**).
+4. **[`billing-service`](../billing-service)**: Microsserviço de **Orçamento (geração, envio e aprovação de orçamento) e Pagamento** integrado ao **Mercado Pago** (EKS + **PostgreSQL 16 dedicado**).
 5. **[`lambda-auth-function`](../lambda-auth-function)**: Autenticação Serverless de clientes por **CPF** (AWS API Gateway + AWS Lambda .NET 8).
 
 > 📄 **Documentação Completa e Validação da Fase 4:** veja [`ARQUITETURA_E_VALIDACAO_FASE4.md`](./ARQUITETURA_E_VALIDACAO_FASE4.md) com o diagrama de sequência ponta a ponta, checklist de gaps por repositório e matriz de validação contra os requisitos do edital.
@@ -46,7 +46,7 @@ flowchart TB
     end
 
     subgraph Bill_Service["💳 billing-service (Orçamento & Pagamento)"]
-        BILL_API["Orcamento & PagamentoController\n/api/v1/orcamento | /api/v1/pagamento"]
+        BILL_API["Orcamento & PagamentoController\n/api/v1/orcamento (gerar/aprovar) | /api/v1/pagamento"]
         DB_BILL[("🗄️ PostgreSQL 16\ntechchallenge_billing_db (SQL)")]
     end
 
@@ -228,6 +228,7 @@ dotnet test tests/Fiap.TechChallenge.E2ETests/Fiap.TechChallenge.E2ETests.csproj
 ```
 
 Cenários BDD cobertos:
-1. **`1_CicloCompletoOrdemServico.feature`**: Abertura, Diagnóstico Técnico, Inclusão de Peças/Serviços, Aprovação de Orçamento, Execução e Confirmação de Entrega (validando APIs HTTP + persistência física em DynamoDB NoSQL e PostgreSQL do Execution Service).
+1. **`1_CicloCompletoOrdemServico.feature`**: Abertura da OS, Diagnóstico Técnico no Execution Service, Geração de Orçamento no Billing Service, Aprovação do Orçamento pelo Cliente, Baixa de Estoque no Core Service, Execução do Serviço e Confirmação de Entrega (validando APIs HTTP + persistência física em DynamoDB NoSQL e PostgreSQL do Execution e Billing Service).
 2. **`2_SagaCompensacaoFalhaEstoque.feature`**: Resiliência e validação transacional da Saga de Estoque.
 3. **`3_SanidadeEContratosMicrosservicos.feature`**: Health checks integrados e comunicação com emulador Floci (DynamoDB, tópicos SNS e filas SQS).
+4. **`4_FluxoFaturamentoEPagamentoOrdemServico.feature`**: Geração de orçamento, emissão de boleto, confirmação via Webhook e liberação automática da OS no Billing Service.
