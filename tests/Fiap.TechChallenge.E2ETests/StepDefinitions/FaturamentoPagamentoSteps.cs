@@ -224,7 +224,8 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
                 Email: string.IsNullOrWhiteSpace(_context.ClienteEmail) ? "cliente@techchallenge.com" : _context.ClienteEmail,
                 Nome: "Cliente",
                 Sobrenome: "TechChallenge",
-                Cpf: "12345678909");
+                Cpf: "12345678909",
+                Endereco: new EnderecoBoletoRequest("01001000", "Praça da Sé", "100", "Sé", "São Paulo", "SP"));
 
             var response = await _http.PostAsJsonAsync(
                 $"{_config.BillingApiUrl}/{BillingApiRoutes.CriarBoleto}",

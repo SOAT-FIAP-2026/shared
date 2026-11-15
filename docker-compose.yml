@@ -2,7 +2,7 @@ name: techchallenge-ecosystem
 
 services:
   floci:
-    image: floci/floci:latest
+    image: floci/floci:2.5.0-compat
     container_name: techchallenge-floci
     ports:
       - "4566:4566"

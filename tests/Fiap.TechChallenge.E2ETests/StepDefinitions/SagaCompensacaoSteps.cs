@@ -185,7 +185,8 @@ namespace Fiap.TechChallenge.E2ETests.StepDefinitions
                 Email: "cliente@techchallenge.com",
                 Nome: "Cliente",
                 Sobrenome: "Saga",
-                Cpf: "12345678909");
+                Cpf: "12345678909",
+                Endereco: new EnderecoBoletoRequest("01001000", "Praça da Sé", "100", "Sé", "São Paulo", "SP"));
 
             var resBoleto = await _http.PostAsJsonAsync($"{_config.BillingApiUrl}/{BillingApiRoutes.CriarBoleto}", boletoRequest);
             resBoleto.StatusCode.Should().Be(HttpStatusCode.Created);
